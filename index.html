@@ -64,52 +64,21 @@
 
       <main class="catalogue-panel">
         
-        <!-- HERO & UNIVERSAL SEARCH SECTION -->
-        <div class="hero-search-card">
-          <h1 class="hero-title">Learn Any Vocational Skill in 11 Video Reels</h1>
-          <p class="hero-subtitle">Official Government NSQF Qualification Packs & Instant AI Skill Courses with step-by-step checklists.</p>
-          
-          <!-- SINGLE UNIVERSAL SEARCH BAR -->
-          <div class="search-box-wrapper">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="universalSearchInput" class="search-input" placeholder="What skill do you want to learn today? (e.g. Car Driving, Solar Panel, Airline Cargo)...">
+        <!-- ULTRA-SIMPLE SINGLE LINE SEARCH & BUILD BAR -->
+        <div class="search-build-bar" style="display: flex; gap: 12px; align-items: center; background: var(--bg-card); padding: 12px 16px; border-radius: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card); margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+            <span style="font-size: 18px; opacity: 0.7;">🔍</span>
+            <input type="text" id="universalSearchInput" class="search-input" placeholder="Type any skill to search or build (e.g. Basil Plantation, Car Driving, Web Developer)..." style="border: none; background: transparent; outline: none; width: 100%; font-size: 15px; color: var(--text-primary);">
           </div>
-
-          <!-- SECTOR CATEGORY FILTER CHIPS -->
-          <div class="sector-chips-wrapper">
-            <div class="sector-chips">
-              <button class="sector-chip active" onclick="filterBySector('all', this)">All Skills</button>
-              <button class="sector-chip" onclick="filterBySector('Automotive', this)">🚗 Automotive</button>
-              <button class="sector-chip" onclick="filterBySector('Aerospace & Aviation', this)">✈️ Aerospace</button>
-              <button class="sector-chip" onclick="filterBySector('Healthcare', this)">🏥 Healthcare</button>
-              <button class="sector-chip" onclick="filterBySector('IT-ITeS', this)">💻 IT & Software</button>
-              <button class="sector-chip" onclick="filterBySector('Logistics', this)">📦 Logistics</button>
-              <button class="sector-chip" onclick="filterBySector('Electronics', this)">⚡ Electronics</button>
-              <button class="sector-chip" onclick="filterBySector('custom_ai', this)">✨ Custom AI Skills</button>
-            </div>
-          </div>
-
-
-
-          <!-- 1-CLICK INSTANT AI BUILD BANNER (Appears when search query is typed) -->
-          <div id="aiBuildBanner" class="ai-build-banner hidden" style="margin-top: 16px;">
-            <div class="ai-build-content">
-              <div>
-                <strong style="color: var(--text-primary); font-size: 15px;">✨ Create Custom 11-Reel Course for "<span id="newTopicTitle"></span>"</strong>
-                <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 0 0;">Synthesize 11 NOS units with verified video reels on-the-fly.</p>
-              </div>
-              <button id="btnBuildSkill" class="btn-primary" onclick="buildSearchedSkill()">
-                ✨ Build 11-Reel Skill Pack
-              </button>
-            </div>
-          </div>
-
-          <div id="aiErrorMsg" class="error-banner" style="display: none; margin-top: 12px;"></div>
-          <div id="skillConfirmCard" class="hidden" style="margin-top: 12px;"></div>
+          <button id="btnBuildSkill" class="btn-primary" onclick="buildSearchedSkill()" style="white-space: nowrap; padding: 10px 20px; font-weight: 700; border-radius: 12px; display: flex; align-items: center; gap: 6px;">
+            ✨ Build 11-Reel Skill Pack
+          </button>
         </div>
 
-        <!-- UNIFIED SKILL GRID HEADER & CARDS -->
-        <div style="margin-top: 24px;">
+        <div id="aiErrorMsg" class="error-banner" style="display: none; margin-bottom: 16px;"></div>
+
+        <!-- UNIFIED SKILL CARDS GRID -->
+        <div>
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 10px;">
               <h2 style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin: 0;">📚 Skill Courses Library</h2>
