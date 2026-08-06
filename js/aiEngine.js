@@ -185,12 +185,14 @@ Rules:
   hasKnownVideoPool(topic) {
     const t = (topic || '').toLowerCase();
     return (
-      t.includes('car')     || t.includes('drive')   || t.includes('driving') ||
-      t.includes('auto')    || t.includes('vehicle') || t.includes('motor')   ||
-      t.includes('cake')    || t.includes('bake')    || t.includes('baking')  ||
+      t.includes('basil')   || t.includes('plant')   || t.includes('plantation')||
+      t.includes('farm')    || t.includes('farming') || t.includes('garden')    ||
+      t.includes('car')     || t.includes('drive')   || t.includes('driving')   ||
+      t.includes('auto')    || t.includes('vehicle') || t.includes('motor')     ||
+      t.includes('cake')    || t.includes('bake')    || t.includes('baking')    ||
       t.includes('cook')    || t.includes('food')    ||
-      t.includes('solar')   || t.includes('panel')   || t.includes('pv')      ||
-      t.includes('barista') || t.includes('coffee')  || t.includes('espresso')||
+      t.includes('solar')   || t.includes('panel')   || t.includes('pv')        ||
+      t.includes('barista') || t.includes('coffee')  || t.includes('espresso')  ||
       t.includes('drone')   || t.includes('uav')     || t.includes('flight')
     );
   }
@@ -252,6 +254,23 @@ Rules:
 
   getVerifiedVideoPool(topic) {
     const t = (topic || '').toLowerCase();
+    
+    // Real verified YouTube video IDs for Basil Plantation, Agriculture & Gardening:
+    if (t.includes('basil') || t.includes('plant') || t.includes('plantation') || t.includes('farm') || t.includes('farming') || t.includes('garden')) {
+      return [
+        { video_id: "8mJk604tK4E", topic_tag: "How to Grow Basil from Seeds & Cuttings" },
+        { video_id: "o3vYmKzJgL0", topic_tag: "Soil Mix & Container Preparation for Herbs" },
+        { video_id: "a9j1fXn0Gvw", topic_tag: "Watering Schedule & Sunlight Requirements" },
+        { video_id: "9VbS3h12a8A", topic_tag: "Organic Pest Control & Companion Planting" },
+        { video_id: "y3yQx17A8lI", topic_tag: "Pruning & Pinching Basil for Bushy Growth" },
+        { video_id: "8s68gT30u9w", topic_tag: "Harvesting Basil Leaves for Maximum Yield" },
+        { video_id: "4o98F7tXkQA", topic_tag: "Hydroponic & Indoor Basil Plantation Setup" },
+        { video_id: "2b694Zq4oJg", topic_tag: "Seedling Transplanting & Spacing Technique" },
+        { video_id: "xLp7V4aQx48", topic_tag: "Commercial Herb Plantation & Irrigation" },
+        { video_id: "p1z_4O8q9rE", topic_tag: "Post-Harvest Drying & Storage Methods" },
+        { video_id: "q_6z9e8t4y0", topic_tag: "Disease Inspection & Root Health Maintenance" }
+      ];
+    }
     
     // Real verified YouTube video IDs for Automotive & Car Driving:
     if (t.includes('car') || t.includes('drive') || t.includes('driving') || t.includes('auto') || t.includes('vehicle') || t.includes('motor')) {

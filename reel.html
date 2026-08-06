@@ -543,7 +543,9 @@
     /* ── YouTube IFrame API callback ── */
     function onYouTubeIframeAPIReady() {
       ytReady = true;
-      if (curriculum) createPlayerForIndex(0);
+      if (curriculum) {
+        createPlayerForIndex(activeIndex >= 0 ? activeIndex : 0);
+      }
     }
 
     /* =====================================================
@@ -563,7 +565,14 @@
         if (!raw) throw new Error('Course not found');
         curriculum = formatStandardizedCurriculum(raw);
         renderReels(curriculum);
-        if (ytReady) createPlayerForIndex(0);
+        
+        setTimeout(() => {
+          if (ytReady || typeof YT !== 'undefined') {
+            ytReady = true;
+            createPlayerForIndex(0);
+          }
+        }, 100);
+
         document.getElementById('reelPageLoading').style.display = 'none';
       } catch (err) {
         console.error(err);

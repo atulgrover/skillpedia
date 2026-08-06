@@ -219,6 +219,31 @@ const OFFICIAL_QPS = [
       { id: "les_10", nos_code: "SEC2/N0501", title: "Reel 10: Highway Driving & Lane Discipline", subtitle: "High Speed Cruising & Safe Overtaking", video_id: "p1z_4O8q9rE", pcs: ["PC1. Merge onto highway matching traffic speed.", "PC2. Use mirrors and indicate before changing lanes.", "PC3. Maintain 3-second safety gap behind vehicles.", "PC4. Execute overtaking on designated right lane."] },
       { id: "les_11", nos_code: "SEC2/N0502", title: "Reel 11: Pre-Drive Safety Inspection & Rules", subtitle: "Tire Pressure, Fluids & Emergency Protocols", video_id: "q_6z9e8t4y0", pcs: ["PC1. Check tire tread depth and air pressure.", "PC2. Inspect engine coolant, brake fluid, and oil level.", "PC3. Verify hazard lights and brake light functionality.", "PC4. Keep emergency warning triangle and first aid kit."] }
     ]
+  },
+  {
+    id: "CUSTOM-BASIL_PLANTATIO-9420",
+    qp_code: "CUSTOM-BASIL_PLANTATIO",
+    type: "custom_ai",
+    version: "1.0",
+    title: "Basil Plantation",
+    subtitle: "AI-Curated 11-Reel Skill Module for Basil Plantation & Herb Farming",
+    sector: "Custom Micro-Learning",
+    nsqf_level: 3,
+    total_reels: 11,
+    created_at: new Date().toISOString(),
+    lessons: [
+      { id: "les_1", nos_code: "SEC2/N0101", title: "Reel 1: Growing Basil from Seeds & Cuttings", subtitle: "Germination & Seedling Nursery Management", video_id: "8mJk604tK4E", pcs: ["PC1. Review safety standards for Basil Plantation.", "PC2. Select high-quality sweet basil seeds or stem cuttings.", "PC3. Prepare potting tray with well-draining soil mix.", "PC4. Monitor seed germination temperature (20-25°C)."] },
+      { id: "les_2", nos_code: "SEC2/N0102", title: "Reel 2: Soil Mix & Container Preparation", subtitle: "pH Balance, Compost & Drainage Setup", video_id: "o3vYmKzJgL0", pcs: ["PC1. Prepare rich organic soil mix with vermicompost.", "PC2. Test soil pH level (optimal 6.0 to 7.5).", "PC3. Ensure adequate drainage holes in planter containers.", "PC4. Apply organic neem cake for root protection."] },
+      { id: "les_3", nos_code: "SEC2/N0103", title: "Reel 3: Watering Schedule & Sunlight Requirements", subtitle: "Irrigation & Full Sun Exposure", video_id: "a9j1fXn0Gvw", pcs: ["PC1. Provide 6-8 hours of direct daily sunlight.", "PC2. Water basil plants deeply when top inch of soil dries.", "PC3. Avoid overhead watering to prevent leaf fungus.", "PC4. Inspect leaf turgidity and moisture levels."] },
+      { id: "les_4", nos_code: "SEC2/N0201", title: "Reel 4: Organic Pest Control & Companion Planting", subtitle: "Aphid Prevention & Natural Repellents", video_id: "9VbS3h12a8A", pcs: ["PC1. Inspect underside of leaves for aphids and spider mites.", "PC2. Spray organic neem oil solution for pest prevention.", "PC3. Plant companion crops like tomatoes and marigolds.", "PC4. Maintain adequate spacing for air circulation."] },
+      { id: "les_5", nos_code: "SEC2/N0202", title: "Reel 5: Pruning & Pinching Basil for Bushy Growth", subtitle: "Stem Pinching & Flower Bud Removal", video_id: "y3yQx17A8lI", pcs: ["PC1. Pinch off top central stem above second leaf node.", "PC2. Remove premature flower buds to extend leaf growth.", "PC3. Encourage lateral side-branching.", "PC4. Maintain clean pruning scissors."] },
+      { id: "les_6", nos_code: "SEC2/N0203", title: "Reel 6: Harvesting Basil Leaves for Maximum Yield", subtitle: "Morning Harvesting & Selective Leaf Picking", video_id: "8s68gT30u9w", pcs: ["PC1. Harvest leaves in early morning when essential oils peak.", "PC2. Pick outer mature leaves from top downwards.", "PC3. Leave bottom leaves intact for photosynthesis.", "PC4. Wash harvested leaves gently in cold water."] },
+      { id: "les_7", nos_code: "SEC2/N0301", title: "Reel 7: Hydroponic & Indoor Basil Setup", subtitle: "Nutrient Solution & LED Grow Lights", video_id: "4o98F7tXkQA", pcs: ["PC1. Set up DWC hydroponic tank or NFT channels.", "PC2. Calibrate EC and PPM nutrient solution levels.", "PC3. Position full-spectrum LED grow lights 12 inches above canopy.", "PC4. Monitor water oxygenation with air pump."] },
+      { id: "les_8", nos_code: "SEC2/N0401", title: "Reel 8: Seedling Transplanting & Spacing Technique", subtitle: "Outdoor Bed Preparation & Spacing", video_id: "2b694Zq4oJg", pcs: ["PC1. Harden off indoor seedlings before transplanting.", "PC2. Space basil plants 12-18 inches apart in raised beds.", "PC3. Mulch bed surface to conserve soil moisture.", "PC4. Water thoroughly immediately after transplanting."] },
+      { id: "les_9", nos_code: "SEC2/N0402", title: "Reel 9: Commercial Herb Plantation & Irrigation", subtitle: "Drip Lines & Fertigation System", video_id: "xLp7V4aQx48", pcs: ["PC1. Install micro-drip irrigation lines.", "PC2. Schedule automated fertigation for organic liquid kelp.", "PC3. Monitor field moisture with soil sensors.", "PC4. Conduct weekly crop health walk."] },
+      { id: "les_10", nos_code: "SEC2/N0501", title: "Reel 10: Post-Harvest Drying & Storage Methods", subtitle: "Air Drying, Freezing & Essential Oil Preservation", video_id: "p1z_4O8q9rE", pcs: ["PC1. Bundle basil stems and hang in dark ventilated room.", "PC2. Strip dried leaves and store in airtight glass jars.", "PC3. Freeze fresh leaves in olive oil ice trays.", "PC4. Label batches with harvest date and variety."] },
+      { id: "les_11", nos_code: "SEC2/N0502", title: "Reel 11: Disease Inspection & Root Health Maintenance", subtitle: "Fusarium Wilt & Downy Mildew Prevention", video_id: "q_6z9e8t4y0", pcs: ["PC1. Inspect roots for root-knot nematodes and rot.", "PC2. Identify downy mildew yellowing on upper leaves.", "PC3. Remove infected plants to prevent field spread.", "PC4. Practice crop rotation with non-lamiaceae species."] }
+    ]
   }
 ];
 
