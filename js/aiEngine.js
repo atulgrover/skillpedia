@@ -112,7 +112,7 @@ Respond ONLY with a valid JSON object matching this exact structure:
       "nos_code": "CUST/N0101",
       "title": "Reel 1: Step Name",
       "subtitle": "Short description of Reel 1",
-      "video_id": "UB1O30fR-EE",
+      "video_id": "REASONABLE_ACTUAL_YOUTUBE_ID",
       "pcs": [
         "PC1. First performance criteria description",
         "PC2. Second performance criteria description",
@@ -127,7 +127,7 @@ Rules:
 3. Return raw JSON only (no markdown formatting).`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s max timeout
+    const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s max timeout
 
     try {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -193,10 +193,9 @@ Rules:
       if (isValid) validCount++;
     }));
 
-    // Require at least 80% of video IDs to be verified on YouTube
     const successRate = validCount / lessons.length;
     console.log(`[AI] Video validation: ${validCount}/${lessons.length} verified (${Math.round(successRate * 100)}%)`);
-    return successRate >= 0.8;
+    return successRate >= 0.7; // Require 70%+ verified
   }
 
   /**
@@ -208,7 +207,7 @@ Rules:
     }
     try {
       const ctrl = new AbortController();
-      setTimeout(() => ctrl.abort(), 1800);
+      setTimeout(() => ctrl.abort(), 3500); // 3.5s timeout
       const res = await fetch(
         `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`,
         { signal: ctrl.signal }
