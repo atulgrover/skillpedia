@@ -20,18 +20,17 @@ class SkillPediaDB {
   }
 
   initLocalStore() {
-    const existing = localStorage.getItem(STORAGE_KEY_CURRICULA);
-    if (!existing) {
-      const mockCount = (typeof MOCK_QPS !== 'undefined' && Array.isArray(MOCK_QPS)) ? MOCK_QPS.length : 0;
-      console.log(`[DB] initLocalStore: No cached curricula found. Seeding from MOCK_QPS (${mockCount} items)`);
+    const cacheVersionKey = 'skillpedia_cache_ver';
+    const currentVersion = 'v3_basil_fix_001';
+
+    if (localStorage.getItem(cacheVersionKey) !== currentVersion) {
+      console.log('[DB] Purging outdated local storage cache for version bump:', currentVersion);
+      localStorage.removeItem(STORAGE_KEY_CURRICULA);
+      localStorage.setItem(cacheVersionKey, currentVersion);
+    }
+
+    if (!localStorage.getItem(STORAGE_KEY_CURRICULA)) {
       localStorage.setItem(STORAGE_KEY_CURRICULA, JSON.stringify(MOCK_QPS || []));
-    } else {
-      const parsed = JSON.parse(existing);
-      console.log(`[DB] initLocalStore: Found ${parsed.length} cached curricula in localStorage`);
-      parsed.forEach((c, i) => {
-        const firstVid = (c.lessons && c.lessons[0]) ? c.lessons[0].video_id : 'NO_LESSONS';
-        console.log(`  [DB] cached[${i}]: id="${c.id}" title="${c.title}" type="${c.type}" firstVideoId="${firstVid}"`);
-      });
     }
     if (!localStorage.getItem(STORAGE_KEY_PACKAGES)) {
       localStorage.setItem(STORAGE_KEY_PACKAGES, JSON.stringify([]));
