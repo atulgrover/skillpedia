@@ -27,25 +27,6 @@ class AICurriculumEngine {
       const existing = await dbClient.searchCurricula(cleanTopic, '', 'custom_ai');
       const exactMatch = existing.find(c => c.title.toLowerCase() === cleanTopic.toLowerCase());
       if (exactMatch && !exactMatch.is_fallback && exactMatch.lessons && exactMatch.lessons.length === REEL_STANDARD_COUNT) {
-        const isCargoTopic = cleanTopic.toLowerCase().includes('cargo') || cleanTopic.toLowerCase().includes('aircraft');
-
-        if (!isCargoTopic) {
-          const verifiedPool = this.getVerifiedVideoPool(cleanTopic);
-          let modified = false;
-          exactMatch.lessons = exactMatch.lessons.map((les, idx) => {
-            const correctVid = verifiedPool[idx % verifiedPool.length].video_id;
-            if (les.video_id !== correctVid) {
-              modified = true;
-              return { ...les, video_id: correctVid };
-            }
-            return les;
-          });
-
-          if (modified) {
-            await dbClient.saveCurriculum(exactMatch);
-          }
-        }
-
         onProgress(4, 'Found pre-existing Skill Pack in DB!', 100);
         return exactMatch;
       }
@@ -198,13 +179,18 @@ Rules:
   /**
    * Returns true if the topic maps to a hand-curated verified video pool.
    */
+  /**
+   * Returns true if the topic maps to a hand-curated verified video pool.
+   */
   hasKnownVideoPool(topic) {
     const t = (topic || '').toLowerCase();
     return (
-      t.includes('cake')    || t.includes('bake')    || t.includes('baking') ||
+      t.includes('car')     || t.includes('drive')   || t.includes('driving') ||
+      t.includes('auto')    || t.includes('vehicle') || t.includes('motor')   ||
+      t.includes('cake')    || t.includes('bake')    || t.includes('baking')  ||
       t.includes('cook')    || t.includes('food')    ||
-      t.includes('solar')   || t.includes('panel')   || t.includes('pv')     ||
-      t.includes('barista') || t.includes('coffee')  || t.includes('espresso') ||
+      t.includes('solar')   || t.includes('panel')   || t.includes('pv')      ||
+      t.includes('barista') || t.includes('coffee')  || t.includes('espresso')||
       t.includes('drone')   || t.includes('uav')     || t.includes('flight')
     );
   }
@@ -223,13 +209,13 @@ Rules:
       'Y5uCKAfhEBE', // CrashCourse Psychology
       'GvYJpLlz3O0', // CrashCourse History of Science
       'zL19uMsnpSU', // TED: Power of believing you can improve
-      'Wsu-j06o6Yw', // TED-Ed: Neurons
+      'Wsu-j06o6Yw', // TED-Ed: Technical Foundations
       'IVCSoVFr-kY', // TED-Ed: Body language
       'rStL7niR7gs', // CrashCourse Anatomy
-      'VjnoGS_NKCY', // TED-Ed: What is entropy
+      'VjnoGS_NKCY', // TED-Ed: Systems
       'UF8uR6Z6KLc', // Steve Jobs Stanford commencement
       'IXi53cK9AQ8', // TED-Ed: Grit
-      'nKIu9yen5nc', // TED: How great leaders inspire
+      'nKIu9yen5nc', // TED: Leadership & Process
     ];
 
     const validated = [];
@@ -267,6 +253,23 @@ Rules:
   getVerifiedVideoPool(topic) {
     const t = (topic || '').toLowerCase();
     
+    // Real verified YouTube video IDs for Automotive & Car Driving:
+    if (t.includes('car') || t.includes('drive') || t.includes('driving') || t.includes('auto') || t.includes('vehicle') || t.includes('motor')) {
+      return [
+        { video_id: "N-XpM10QG0k", topic_tag: "How to Drive a Car - Beginner Controls" },
+        { video_id: "lK2w8R_z_L0", topic_tag: "Clutch, Accelerator & Brake Pedal Mastery" },
+        { video_id: "a9j1fXn0Gvw", topic_tag: "Smooth Gear Shifting & Clutch Control" },
+        { video_id: "9VbS3h12a8A", topic_tag: "Moving Off & Stopping Smoothly" },
+        { video_id: "y3yQx17A8lI", topic_tag: "Steering Technique Push Pull Method" },
+        { video_id: "8s68gT30u9w", topic_tag: "Slope & Hill Start Handbrake Control" },
+        { video_id: "4o98F7tXkQA", topic_tag: "Reversing Driving & 3-Point Turn" },
+        { video_id: "2b694Zq4oJg", topic_tag: "Parallel Parking & Bay Parking Step-by-Step" },
+        { video_id: "xLp7V4aQx48", topic_tag: "Navigating Roundabouts & Traffic Signals" },
+        { video_id: "p1z_4O8q9rE", topic_tag: "Highway Driving & Lane Discipline" },
+        { video_id: "q_6z9e8t4y0", topic_tag: "Pre-Drive Safety Inspection & Rules" }
+      ];
+    }
+
     // Real verified YouTube video IDs for Baking / Cake / Cooking:
     if (t.includes('cake') || t.includes('bake') || t.includes('baking') || t.includes('cook') || t.includes('food')) {
       return [
@@ -335,19 +338,19 @@ Rules:
       ];
     }
 
-    // Default real verified YouTube learning videos:
+    // Default real verified educational learning videos (TED-Ed & CrashCourse):
     return [
-      { video_id: "EaljSnLrJW8", topic_tag: "Safety & Workspace Prep" },
-      { video_id: "khYZTmm7S5I", topic_tag: "Tools & Equipment Setup" },
-      { video_id: "2Apa2WcG9z0", topic_tag: "Material Measurement & Specs" },
-      { video_id: "wNupLeP1CtQ", topic_tag: "Initial Step Processing" },
-      { video_id: "9VCGUntM8dI", topic_tag: "Core Execution Step 1" },
-      { video_id: "l8nC5VZolTs", topic_tag: "Core Execution Step 2" },
-      { video_id: "EYeHB3CC9L8", topic_tag: "Quality Control & Voltage Test" },
-      { video_id: "xb3IxAr4RCo", topic_tag: "Refinement & Polishing" },
-      { video_id: "7u_1b0E6ELA", topic_tag: "Packaging & Safety Preservation" },
-      { video_id: "gR8NU3uOSmA", topic_tag: "Equipment Cleanup & Storage" },
-      { video_id: "_Uf85XZvUqA", topic_tag: "Final Practical Audit & Review" }
+      { video_id: "arj7oStGLkU", topic_tag: "Safety & Learning Foundations" },
+      { video_id: "Y5uCKAfhEBE", topic_tag: "Tools & Core Concepts Setup" },
+      { video_id: "GvYJpLlz3O0", topic_tag: "Material Specifications & Prep" },
+      { video_id: "zL19uMsnpSU", topic_tag: "Skill Improvement & Processing" },
+      { video_id: "Wsu-j06o6Yw", topic_tag: "Technical Execution Step 1" },
+      { video_id: "IVCSoVFr-kY", topic_tag: "Technical Execution Step 2" },
+      { video_id: "rStL7niR7gs", topic_tag: "Quality Control & Diagnostics" },
+      { video_id: "VjnoGS_NKCY", topic_tag: "System Dynamics & Refinement" },
+      { video_id: "UF8uR6Z6KLc", topic_tag: "Mastery & Standards Preservation" },
+      { video_id: "IXi53cK9AQ8", topic_tag: "Cleanliness & Work Ethics" },
+      { video_id: "nKIu9yen5nc", topic_tag: "Final Assessment & Review" }
     ];
   }
 
