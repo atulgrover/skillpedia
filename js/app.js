@@ -197,7 +197,12 @@ async function openCurriculumReels(idOrCode) {
 function buildSearchedSkill() {
   const input = document.getElementById('universalSearchInput');
   if (input && input.value.trim()) {
-    buildReelCurriculum(input.value.trim());
+    const topicText = input.value.trim();
+    // Enforce Mandatory Creator Authentication & Responsibility Audit Trail
+    authClient.requireCreatorAuth((user) => {
+      console.log(`[APP] Creator Auth verified for: ${user.email}. Building AI skill pack for "${topicText}"...`);
+      buildReelCurriculum(topicText);
+    });
   }
 }
 

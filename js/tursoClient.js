@@ -132,7 +132,15 @@ class SkillPediaDB {
   async saveCurriculum(curriculum) {
     if (!curriculum || !curriculum.id) return curriculum;
 
-    console.log(`%c[DB] Direct Turso UPSERT for: "${curriculum.title}" (${curriculum.id})`, 'color: #4ade80; font-weight: bold');
+    // Attach Creator Audit Trail
+    const currentUser = (typeof authClient !== 'undefined' && authClient.getUser()) ? authClient.getUser() : null;
+    if (currentUser) {
+      curriculum.creator_email = currentUser.email;
+      curriculum.creator_id = currentUser.id;
+      curriculum.creator_name = currentUser.full_name;
+    }
+
+    console.log(`%c[DB] Direct Turso UPSERT for: "${curriculum.title}" (${curriculum.id}) by Creator: "${curriculum.creator_email || 'System'}"`, 'color: #4ade80; font-weight: bold');
 
     const lessonsJson = JSON.stringify(curriculum.lessons || []);
 
@@ -160,7 +168,7 @@ class SkillPediaDB {
     }]);
 
     if (res) {
-      console.log(`[DB] ✅ Turso Edge DB UPSERT successful for: ${curriculum.title}`);
+      console.log(`[DB] ✅ Turso Edge DB UPSERT successful for: ${curriculum.title} (Creator Audit Trail Logged)`);
     }
 
     return curriculum;
