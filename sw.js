@@ -1,7 +1,5 @@
-const CACHE_NAME = 'skillpedia-v3';
+const CACHE_NAME = 'skillpedia-v4-network-first';
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
   './manifest.json',
   './css/portal.css',
   './AAS/logo_dark.png',
@@ -9,6 +7,7 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  console.log('[SW] Installing skillpedia-v4-network-first');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -18,12 +17,13 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating skillpedia-v4-network-first & deleting old caches');
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('[SW] Deleting obsolete cache:', key);
+            console.log('[SW] Purging old cache:', key);
             return caches.delete(key);
           }
         })
@@ -41,8 +41,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-First for JS files to ensure immediate updates after deploy
-  if (url.pathname.endsWith('.js')) {
+  // Network-First for ALL HTML and JS files to ensure immediate updates after deploy
+  if (url.pathname.endsWith('.html') || url.pathname.endsWith('.js') || url.pathname === '/' || url.pathname.endsWith('/')) {
     event.respondWith(
       fetch(event.request)
         .then((networkResponse) => {
