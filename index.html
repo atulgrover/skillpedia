@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SkillPedia - National Skill Video Portal (PWA)</title>
   <meta name="title" content="SkillPedia - National Skill Video Portal (PWA)">
-  <meta name="description" content="Explore standardized 11-reel vocational skill courses, AI micro-learning modules, and performance criteria checklists on SkillPedia.">
+  <meta name="description" content="Explore standardized 11-reel vocational skill courses and instant AI micro-learning modules on SkillPedia.">
 
   <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://skillpedia.pages.dev/">
   <meta property="og:title" content="SkillPedia - National Skill Video Portal">
-  <meta property="og:description" content="Explore standardized 11-reel vocational skill courses, AI micro-learning modules, and performance criteria checklists on SkillPedia.">
+  <meta property="og:description" content="Explore standardized 11-reel vocational skill courses and instant AI micro-learning modules on SkillPedia.">
   <meta property="og:image" content="https://skillpedia.pages.dev/og_banner.png">
   <meta property="og:image:secure_url" content="https://skillpedia.pages.dev/og_banner.png">
   <meta property="og:image:type" content="image/png">
@@ -22,7 +22,7 @@
   <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content="https://skillpedia.pages.dev/">
   <meta property="twitter:title" content="SkillPedia - National Skill Video Portal">
-  <meta property="twitter:description" content="Explore standardized 11-reel vocational skill courses, AI micro-learning modules, and performance criteria checklists on SkillPedia.">
+  <meta property="twitter:description" content="Explore standardized 11-reel vocational skill courses and instant AI micro-learning modules on SkillPedia.">
   <meta property="twitter:image" content="https://skillpedia.pages.dev/og_banner.png">
 
   <!-- PWA & Mobile Meta Tags -->
@@ -53,15 +53,7 @@
         </div>
       </a>
 
-      <!-- MAIN NAVIGATION TABS -->
-      <nav class="nav-tabs">
-        <button class="nav-tab-btn active" onclick="switchSection('sectionNSQF', this)">🎓 NSQF Skill Packs</button>
-        <button class="nav-tab-btn" onclick="switchSection('sectionAIGenerator', this)">💡 CUSTOM Skill Packs</button>
-      </nav>
-
       <div class="nav-controls">
-        <!-- Employer Sign In commented out for future re-activation -->
-        <!-- <button id="navAuthBtn" class="btn-secondary" onclick="openAuthModal()">🔑 Employer Sign In</button> -->
         <button id="pwaInstallBtn" class="btn-install-pwa" style="display: none;" onclick="installPWA()">📲 Install App</button>
         <button id="themeToggleBtn" class="btn-icon" aria-label="Toggle Theme" onclick="toggleTheme()">🌙</button>
       </div>
@@ -70,178 +62,75 @@
     <!-- MAIN DASHBOARD CONTENT -->
     <div class="main-wrapper">
 
-      <!-- LEFT PANEL: SECTION CONTROLLERS -->
       <main class="catalogue-panel">
         
-        <!-- SECTION 1: NSQF OFFICIAL CATALOGUE -->
-        <section id="sectionNSQF" class="portal-section">
-          <div class="hero-search-card">
-            <div class="hero-header-badge">
-              <span class="badge-gov-official">🇮🇳 Official Government Curricula</span>
-              <span class="badge-fixed-curriculum">🔒 Unalterable Standard Packs</span>
-            </div>
-            <h1 class="hero-title">National Skill Video Explorer</h1>
-            <p class="hero-subtitle">Discover official government-approved NSQF Qualification Packs (QPs). Fixed curricula with 11 standardized skill-reels and Performance Criteria (PC) checklists.</p>
-            
-            <div class="search-box-wrapper">
-              <span class="search-icon">🔍</span>
-              <input type="text" id="searchInput" class="search-input" placeholder="Search by QP Code (e.g. AAS/Q0103), Job Role, or Industry Sector...">
-            </div>
+        <!-- HERO & UNIVERSAL SEARCH SECTION -->
+        <div class="hero-search-card">
+          <h1 class="hero-title">Learn Any Vocational Skill in 11 Video Reels</h1>
+          <p class="hero-subtitle">Official Government NSQF Qualification Packs & Instant AI Skill Courses with step-by-step checklists.</p>
+          
+          <!-- SINGLE UNIVERSAL SEARCH BAR -->
+          <div class="search-box-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="universalSearchInput" class="search-input" placeholder="What skill do you want to learn today? (e.g. Car Driving, Solar Panel, Airline Cargo)...">
+          </div>
 
-            <!-- SECTOR & INDUSTRY QUICK FILTER CHIPS -->
-            <div class="sector-chips-wrapper">
-              <span class="sector-label">Filter by Sector:</span>
-              <div class="sector-chips">
-                <button class="sector-chip active" onclick="filterBySector('all', this)">All Sectors</button>
-                <button class="sector-chip" onclick="filterBySector('Aerospace & Aviation', this)">✈️ Aerospace</button>
-                <button class="sector-chip" onclick="filterBySector('Automotive', this)">🚗 Automotive</button>
-                <button class="sector-chip" onclick="filterBySector('Healthcare', this)">🏥 Healthcare</button>
-                <button class="sector-chip" onclick="filterBySector('IT-ITeS', this)">💻 IT & Software</button>
-                <button class="sector-chip" onclick="filterBySector('Logistics', this)">📦 Logistics</button>
-                <button class="sector-chip" onclick="filterBySector('Electronics', this)">⚡ Electronics</button>
-              </div>
+          <!-- SECTOR CATEGORY FILTER CHIPS -->
+          <div class="sector-chips-wrapper">
+            <div class="sector-chips">
+              <button class="sector-chip active" onclick="filterBySector('all', this)">All Skills</button>
+              <button class="sector-chip" onclick="filterBySector('Automotive', this)">🚗 Automotive</button>
+              <button class="sector-chip" onclick="filterBySector('Aerospace & Aviation', this)">✈️ Aerospace</button>
+              <button class="sector-chip" onclick="filterBySector('Healthcare', this)">🏥 Healthcare</button>
+              <button class="sector-chip" onclick="filterBySector('IT-ITeS', this)">💻 IT & Software</button>
+              <button class="sector-chip" onclick="filterBySector('Logistics', this)">📦 Logistics</button>
+              <button class="sector-chip" onclick="filterBySector('Electronics', this)">⚡ Electronics</button>
+              <button class="sector-chip" onclick="filterBySector('custom_ai', this)">✨ Custom AI Skills</button>
             </div>
           </div>
 
-          <div id="qpGrid" class="qp-grid">
-            <!-- Dynamic QP Cards Rendered via JS -->
-          </div>
-        </section>
-
-        <!-- SECTION 2: CUSTOM ON-THE-FLY AI SKILL REEL GENERATOR -->
-        <section id="sectionAIGenerator" class="portal-section hidden">
-          <div class="hero-search-card">
-            <div class="hero-header-badge">
-              <span class="badge-ai-custom">✨ Dynamic On-the-Fly Collection</span>
-              <span class="badge-llm-powered">🤖 LLM + Video Search Engine</span>
+          <!-- QUICK PROMPT PRESETS -->
+          <div class="prompt-presets-container" style="margin-top: 12px;">
+            <span class="preset-label">Quick Suggestions:</span>
+            <div class="prompt-presets">
+              <button type="button" class="preset-chip" onclick="fillAndSearch('Car Driving')">🚗 Car Driving</button>
+              <button type="button" class="preset-chip" onclick="fillAndSearch('Baking a Chocolate Cake')">🍫 Baking a Cake</button>
+              <button type="button" class="preset-chip" onclick="fillAndSearch('Solar Panel Installation')">☀️ Solar Panel</button>
+              <button type="button" class="preset-chip" onclick="fillAndSearch('Drone Maintenance & Flight')">🛸 Drone Flight</button>
+              <button type="button" class="preset-chip" onclick="fillAndSearch('Barista Espresso Coffee Crafting')">☕ Barista Coffee</button>
             </div>
-            <h1 class="hero-title">Custom On-The-Fly Skill Pack Engine</h1>
-            <p class="hero-subtitle">Type any skill or topic you want to learn. Our AI engine builds a tailored 11-step curriculum and curates relevant video reels on-the-fly.</p>
-            
-            <form id="aiGenerateForm" style="margin-top: 16px;">
-              <div class="search-box-wrapper">
-                <span class="search-icon">💡</span>
-                <input type="text" id="aiTopicInput" class="search-input" placeholder="What skill do you want to learn? (e.g. Baking a Cake, Solar Panel Installation)...">
-              </div>
-
-              <!-- PROMPT PRESETS -->
-              <div class="prompt-presets-container" style="margin-top: 12px;">
-                <span class="preset-label">Instant preset examples:</span>
-                <div class="prompt-presets">
-                  <button type="button" class="preset-chip" onclick="fillAndGeneratePrompt('Baking a Chocolate Cake')">🍫 Baking a Chocolate Cake</button>
-                  <button type="button" class="preset-chip" onclick="fillAndGeneratePrompt('Solar Panel Installation')">☀️ Solar Panel Installation</button>
-                  <button type="button" class="preset-chip" onclick="fillAndGeneratePrompt('Drone Maintenance & Flight')">🛸 Drone Flight & Maintenance</button>
-                  <button type="button" class="preset-chip" onclick="fillAndGeneratePrompt('Barista Espresso Coffee Crafting')">☕ Barista Espresso Crafting</button>
-                </div>
-              </div>
-
-              <button type="submit" id="btnSubmitAI" class="btn-primary" style="margin-top: 16px; width: 100%;">
-                ✨ Build Custom 11-Reel Skill Pack On-The-Fly
-              </button>
-            </form>
-
-            <!-- WORKFLOW STEPS VISUAL INDICATOR -->
-            <div class="workflow-steps-card">
-              <div class="workflow-step">
-                <span class="step-num">1</span>
-                <div>
-                  <strong>Learner Prompt</strong>
-                  <p>Enter any skill or keywords</p>
-                </div>
-              </div>
-              <div class="workflow-arrow">➔</div>
-              <div class="workflow-step">
-                <span class="step-num">2</span>
-                <div>
-                  <strong>LLM Curriculum</strong>
-                  <p>Generates 11-step NOS & PCs</p>
-                </div>
-              </div>
-              <div class="workflow-arrow">➔</div>
-              <div class="workflow-step">
-                <span class="step-num">3</span>
-                <div>
-                  <strong>On-The-Fly Reels</strong>
-                  <p>Matches relevant videos</p>
-                </div>
-              </div>
-              <div class="workflow-arrow">➔</div>
-              <div class="workflow-step">
-                <span class="step-num">4</span>
-                <div>
-                  <strong>Instant Playback</strong>
-                  <p>Interactive 11-reel viewer</p>
-                </div>
-              </div>
-            </div>
-
-            <div id="aiErrorMsg" class="error-banner" style="display: none; margin-top: 12px;"></div>
-            
-            <!-- SKILL NAME CONFIRMATION CARD (populated by AI pre-pass) -->
-            <div id="skillConfirmCard" class="hidden" style="margin-top: 12px;"></div>
           </div>
 
-          <div id="aiGenerateResult"></div>
-
-          <!-- CREATED CUSTOM SKILL PACKS COLLECTION GRID -->
-          <div style="margin-top: 24px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <h2 style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin: 0;">📚 Custom Skill Packs Collection</h2>
-                <span id="customCountBadge" style="font-size: 12px; background: rgba(168, 85, 247, 0.15); color: #c084fc; padding: 2px 10px; border-radius: 10px; border: 1px solid rgba(168, 85, 247, 0.3);">0 Packs</span>
+          <!-- 1-CLICK INSTANT AI BUILD BANNER (Appears when search query is typed) -->
+          <div id="aiBuildBanner" class="ai-build-banner hidden" style="margin-top: 16px;">
+            <div class="ai-build-content">
+              <div>
+                <strong style="color: var(--text-primary); font-size: 15px;">✨ Create Custom 11-Reel Course for "<span id="newTopicTitle"></span>"</strong>
+                <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 0 0;">Synthesize 11 NOS units with verified video reels on-the-fly.</p>
               </div>
-              <button class="btn-secondary" style="font-size: 11px; padding: 4px 10px; border-color: rgba(239, 68, 68, 0.4); color: #f87171; background: rgba(239, 68, 68, 0.1);" onclick="clearAllCustomSkills()">
-                🗑️ Clear All Custom Skills
+              <button id="btnBuildSkill" class="btn-primary" onclick="buildSearchedSkill()">
+                ✨ Build 11-Reel Skill Pack
               </button>
             </div>
-            <div id="customQpGrid" class="qp-grid">
-              <!-- Custom AI Skill Cards rendered via JS -->
+          </div>
+
+          <div id="aiErrorMsg" class="error-banner" style="display: none; margin-top: 12px;"></div>
+          <div id="skillConfirmCard" class="hidden" style="margin-top: 12px;"></div>
+        </div>
+
+        <!-- UNIFIED SKILL GRID HEADER & CARDS -->
+        <div style="margin-top: 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h2 style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin: 0;">📚 Skill Courses Library</h2>
+              <span id="skillCountBadge" style="font-size: 12px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 10px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.3);">Loading...</span>
             </div>
           </div>
-        </section>
 
-        <!-- SECTION 3: EMPLOYER REQUEST PORTAL (COMMENTED OUT FOR FUTURE RE-ACTIVATION) -->
-        <!--
-        <section id="sectionEmployer" class="portal-section hidden">
-          <div class="hero-search-card">
-            <h1 class="hero-title">Employer Skill-Reel Request Portal</h1>
-            <p class="hero-subtitle">Bundle custom 11-reel skill packages for your team, add employer instructions, and share URL/QR codes with your employees.</p>
-            
-            <div id="userAuthStatus" class="auth-status-banner" style="display: none; margin-bottom: 12px;"></div>
-
-            <form id="employerForm" class="employer-form-card" style="margin-top: 16px;">
-              <div class="form-group">
-                <label>Company / Organization Name *</label>
-                <input type="text" id="empCompanyInput" class="form-control" placeholder="e.g. Tata Logistics Ltd." required>
-              </div>
-
-              <div class="form-group">
-                <label>Target Role / Department</label>
-                <input type="text" id="empRoleInput" class="form-control" placeholder="e.g. Junior Cargo Handlers / Shift A">
-              </div>
-
-              <div class="form-group">
-                <label>Select 11-Reel Skill Curriculum *</label>
-                <select id="empCurriculumSelect" class="form-control" required>
-                  <option value="AAS/Q0103">AAS/Q0103 - Airline Cargo Assistant (11 Reels)</option>
-                  <option value="ASC/Q1402">ASC/Q1402 - Automotive Service Technician (11 Reels)</option>
-                  <option value="HSS/Q5101">HSS/Q5101 - General Duty Assistant (11 Reels)</option>
-                  <option value="SSC/Q0501">SSC/Q0501 - Software Developer (11 Reels)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Instructor / Employer Notes for Employees</label>
-                <textarea id="empNoteInput" class="form-control" rows="3" placeholder="e.g. Please watch Reels 1 through 5 before your Monday shift safety audit."></textarea>
-              </div>
-
-              <button type="submit" class="btn-primary" style="width: 100%; margin-top: 12px;">
-                🔗 Generate Shareable Employee URL & QR Code
-              </button>
-            </form>
+          <div id="unifiedGrid" class="qp-grid">
+            <!-- All Skill Cards (Official & Custom) rendered seamlessly here -->
           </div>
-        </section>
-        -->
+        </div>
 
       </main>
 
@@ -280,54 +169,9 @@
       </div>
     </div>
 
-    <!-- USER AUTHENTICATION MODAL (COMMENTED OUT FOR FUTURE RE-ACTIVATION) -->
-    <!--
-    <div id="authModal" class="modal-backdrop hidden">
-      <div class="modal-card">
-        <h2>🔑 Employer / Creator Sign In</h2>
-        <p>Sign in to save custom 11-reel packages and track employee training assignments.</p>
-        
-        <form id="authForm" style="margin-top: 16px;">
-          <div class="form-group">
-            <label>Work Email Address *</label>
-            <input type="email" id="authEmail" class="form-control" placeholder="name@company.com" required>
-          </div>
-
-          <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" id="authName" class="form-control" placeholder="Your Name">
-          </div>
-
-          <div class="form-group">
-            <label>Company / Organization</label>
-            <input type="text" id="authCompany" class="form-control" placeholder="Company Name">
-          </div>
-
-          <button type="submit" class="btn-primary" style="width: 100%; margin-top: 12px;">Sign In / Continue</button>
-          <button type="button" class="btn-secondary" style="width: 100%; margin-top: 8px;" onclick="closeAuthModal()">Cancel</button>
-        </form>
-      </div>
-    </div>
-    -->
-
-    <!-- PWA INSTALL PROMPT BANNER -->
-    <div id="pwaBanner" class="pwa-banner hidden">
-      <div class="pwa-info">
-        <span style="font-size: 24px;">📱</span>
-        <div class="pwa-text">
-          <h4>Install SkillPedia App</h4>
-          <p>Add to your home screen for fast offline 11-reel learning.</p>
-        </div>
-      </div>
-      <div style="display: flex; gap: 8px;">
-        <button class="btn-install-pwa" onclick="installPWA()">Install</button>
-        <button class="btn-icon" style="width: 32px; height: 32px; font-size: 14px;" onclick="closePWABanner()">✕</button>
-      </div>
-    </div>
-
   </div>
 
-  <!-- JavaScript Modules -->
+  <!-- Dependencies -->
   <script src="./js/config.js"></script>
   <script src="./js/mockData.js"></script>
   <script src="./js/schemas.js"></script>

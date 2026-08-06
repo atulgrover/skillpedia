@@ -55,6 +55,24 @@ html, body {
   display: none !important;
 }
 
+/* AI BUILD BANNER (1-CLICK BUILD) */
+.ai-build-banner {
+  background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.15), rgba(168, 85, 247, 0.08));
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 14px;
+  padding: 14px 18px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ai-build-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 /* APP CONTAINER */
 .app-container {
   display: flex;
