@@ -1,5 +1,5 @@
 /**
- * SkillPedia Standardized 11-Reel HTML Viewer & Template Engine
+ * SkillPedia Standardized 11-Reel HTML Viewer & Interactive Creator Confirmation Studio
  */
 
 class SkillReelViewer {
@@ -7,11 +7,194 @@ class SkillReelViewer {
     this.currentCurriculum = null;
     this.currentLessonIndex = 0;
     this.employerInfo = null;
+    this.studioDraft = null;
+    this.confirmedReels = new Set();
   }
 
   /**
-   * Mounts the reel player into a given container or opens in modal view
+   * Opens the Interactive Creator 11-Reel Confirmation & Preview Studio
    */
+  openCreatorConfirmationStudio(llmResult) {
+    this.studioDraft = JSON.parse(JSON.stringify(llmResult)); // deep copy draft
+    this.confirmedReels = new Set();
+
+    let modal = document.getElementById('creatorStudioModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'creatorStudioModal';
+      modal.className = 'modal-backdrop';
+      document.body.appendChild(modal);
+    }
+
+    this.renderStudioModal(modal);
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+
+  renderStudioModal(modal) {
+    const draft = this.studioDraft;
+    const total = draft.lessons.length;
+    const confirmedCount = this.confirmedReels.size;
+
+    modal.innerHTML = `
+      <div class="modal-card" style="max-width: 780px; width: 95%; max-height: 90vh; overflow-y: auto; padding: 24px; background: var(--bg-drawer); border: 1px solid var(--accent-cyan-border); border-radius: 20px; box-shadow: var(--shadow-card);">
+        
+        <!-- STUDIO HEADER -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 24px;">🎨</span>
+              <h2 style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin: 0;">Creator 11-Reel Confirmation Studio</h2>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin: 4px 0 0 0;">Inspect, preview & confirm all 11 reels step-by-step for "<strong>${draft.title}</strong>".</p>
+          </div>
+          <button onclick="reelViewer.closeStudioModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+
+        <!-- PROGRESS BAR -->
+        <div style="margin-bottom: 20px; background: var(--bg-card); padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Reels Confirmed: ${confirmedCount} / ${total}</span>
+          <div style="width: 200px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+            <div style="width: ${(confirmedCount / total) * 100}%; height: 100%; background: var(--accent-cyan); transition: width 0.3s ease;"></div>
+          </div>
+        </div>
+
+        <!-- 11 REEL CONFIRMATION CARDS -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          ${draft.lessons.map((les, idx) => {
+            const isConfirmed = this.confirmedReels.has(idx);
+            const candidates = les.candidates || [{ video_id: les.video_id, title: les.title }];
+
+            return `
+              <div id="studioCard_${idx}" style="background: var(--bg-card); border: 1px solid ${isConfirmed ? '#4ade80' : 'var(--border-subtle)'}; border-radius: 16px; padding: 16px; transition: border-color 0.3s ease;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="background: var(--accent-cyan-bg); color: var(--accent-cyan); font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 6px;">Reel ${idx + 1} of ${total}</span>
+                    <strong style="font-size: 15px; color: var(--text-primary);">${les.title}</strong>
+                  </div>
+                  <button onclick="reelViewer.toggleReelConfirmation(${idx})" style="background: ${isConfirmed ? '#4ade80' : 'var(--bg-primary)'}; color: ${isConfirmed ? '#000' : 'var(--text-primary)'}; border: 1px solid ${isConfirmed ? '#4ade80' : 'var(--border-subtle)'}; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer;">
+                    ${isConfirmed ? '✅ Confirmed' : '⭕ Click to Confirm Reel'}
+                  </button>
+                </div>
+
+                <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 12px 0;">${les.subtitle}</p>
+
+                <!-- VIDEO PLAYER PREVIEW -->
+                <div style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; background: #000; position: relative; padding-top: 56.25%;">
+                  <iframe id="studioIframe_${idx}" src="https://www.youtube.com/embed/${les.video_id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+
+                <!-- VIDEO ALTERNATIVE CANDIDATES -->
+                <div style="margin-bottom: 12px;">
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">🔄 AI-Suggested Video Alternatives:</label>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    ${candidates.map((cand, cIdx) => `
+                      <button onclick="reelViewer.swapStudioVideo(${idx}, '${cand.video_id}')" style="text-align: left; background: ${les.video_id === cand.video_id ? 'var(--accent-cyan-bg)' : 'var(--bg-primary)'}; border: 1px solid ${les.video_id === cand.video_id ? 'var(--accent-cyan)' : 'var(--border-subtle)'}; color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                        <span>${cIdx === 0 ? '⭐ Top Match:' : `Option ${cIdx + 1}:`} ${cand.title.substring(0, 50)}...</span>
+                        <span style="font-family: monospace; font-size: 11px; opacity: 0.7;">ID: ${cand.video_id}</span>
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- PASTE CUSTOM YOUTUBE LINK -->
+                <div>
+                  <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">🔗 Paste Custom YouTube URL (Optional):</label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="text" id="customUrlInput_${idx}" placeholder="https://www.youtube.com/watch?v=..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-subtle); background: var(--bg-primary); color: var(--text-primary); font-size: 12px;">
+                    <button onclick="reelViewer.applyCustomUrl(${idx})" class="btn-primary" style="padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 8px;">Apply URL</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <!-- FOOTER ACTIONS -->
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <button onclick="reelViewer.closeStudioModal()" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;">
+            Cancel
+          </button>
+          <button onclick="reelViewer.publishVerifiedCourse()" class="btn-primary" style="padding: 12px 24px; font-size: 15px; font-weight: 800; border-radius: 12px; box-shadow: var(--shadow-glow);">
+            🚀 Publish 11-Reel Skill Course to Turso Edge DB
+          </button>
+        </div>
+
+      </div>
+    `;
+  }
+
+  toggleReelConfirmation(idx) {
+    if (this.confirmedReels.has(idx)) {
+      this.confirmedReels.delete(idx);
+    } else {
+      this.confirmedReels.add(idx);
+    }
+    const modal = document.getElementById('creatorStudioModal');
+    if (modal) this.renderStudioModal(modal);
+  }
+
+  swapStudioVideo(idx, videoId) {
+    if (this.studioDraft && this.studioDraft.lessons[idx]) {
+      this.studioDraft.lessons[idx].video_id = videoId;
+      const iframe = document.getElementById(`studioIframe_${idx}`);
+      if (iframe) iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
+      const modal = document.getElementById('creatorStudioModal');
+      if (modal) this.renderStudioModal(modal);
+    }
+  }
+
+  async applyCustomUrl(idx) {
+    const input = document.getElementById(`customUrlInput_${idx}`);
+    if (!input || !input.value.trim()) return;
+
+    const rawUrl = input.value.trim();
+    if (typeof validateYouTubeUrlSafety === 'function') {
+      const audit = await validateYouTubeUrlSafety(rawUrl);
+      if (!audit.safe) {
+        alert(audit.reason);
+        return;
+      }
+      this.swapStudioVideo(idx, audit.videoId);
+    } else {
+      const match = rawUrl.match(/(?:v=|\/embed\/|youtu\.be\/|\/shorts\/)([a-zA-Z0-9_-]{11})/);
+      if (match) {
+        this.swapStudioVideo(idx, match[1]);
+      } else {
+        alert('Invalid YouTube URL format.');
+      }
+    }
+  }
+
+  async publishVerifiedCourse() {
+    if (!this.studioDraft) return;
+
+    const formatted = formatStandardizedCurriculum({
+      id: `CUSTOM-${this.studioDraft.title.toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 15)}-${Date.now().toString().slice(-4)}`,
+      type: CURRICULUM_TYPES.CUSTOM_AI,
+      title: this.studioDraft.title,
+      subtitle: this.studioDraft.subtitle || `AI-Curated 11-Reel Skill Module`,
+      sector: this.studioDraft.sector || 'Custom Micro-Learning',
+      nsqf_level: 3,
+      total_reels: 11,
+      lessons: this.studioDraft.lessons
+    });
+
+    await dbClient.saveCurriculum(formatted);
+    this.closeStudioModal();
+
+    if (typeof renderUnifiedCatalogue === 'function') renderUnifiedCatalogue();
+    this.loadReelPackage(formatted);
+  }
+
+  closeStudioModal() {
+    const modal = document.getElementById('creatorStudioModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+  }
+
   loadReelPackage(curriculum, employerInfo = null) {
     this.currentCurriculum = curriculum;
     this.currentLessonIndex = 0;
@@ -23,53 +206,18 @@ class SkillReelViewer {
     this.renderViewer(sideInspector);
     sideInspector.classList.remove('hidden');
 
-    // Scroll into view on mobile
     if (window.innerWidth <= 768) {
       sideInspector.scrollIntoView({ behavior: 'smooth' });
     }
-  }
-
-  /**
-   * Mounts the reel player into a specific container element (used for fullscreen learner modal)
-   */
-  loadReelPackageInto(curriculum, container, employerInfo = null) {
-    this.currentCurriculum = curriculum;
-    this.currentLessonIndex = 0;
-    this.employerInfo = employerInfo;
-    this._container = container; // remember custom container for re-renders
-
-    this.renderViewer(container);
   }
 
   renderViewer(container) {
     const curr = this.currentCurriculum;
     const lesson = curr.lessons[this.currentLessonIndex];
     const totalReels = curr.lessons.length;
-    const savedProgress = this.getLessonProgress(curr.id, lesson.id);
 
     container.innerHTML = `
       <div class="reel-player-wrapper">
-        
-        <!-- LEARNER MODE DIRECT HEADER BAR -->
-        ${document.body.classList.contains('learner-mode') ? `
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 10px 14px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px;">
-            <span style="font-size: 13px; font-weight: 700; color: var(--accent-cyan);">🎓 SkillPedia Learner View</span>
-            <button onclick="reelViewer.exitLearnerMode()" style="background: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-primary); font-size: 11px; padding: 4px 10px; border-radius: 8px; font-weight: 700; cursor: pointer;">
-              🏠 Explore All Skills
-            </button>
-          </div>
-        ` : ''}
-
-        <!-- EMPLOYER BRANDING HEADER (IF SHARED LINK) -->
-        ${this.employerInfo ? `
-          <div class="employer-banner-header">
-            <div class="employer-badge">🏢 ${this.employerInfo.company_name} Training</div>
-            <div class="employer-role">${this.employerInfo.target_role || 'Employee Skill Pack'}</div>
-            ${this.employerInfo.instructor_note ? `<p class="employer-note">💬 Note: ${this.employerInfo.instructor_note}</p>` : ''}
-          </div>
-        ` : ''}
-
-        <!-- 11-REEL PROGRESS BAR -->
         <div class="reel-step-tracker">
           <div class="reel-step-header">
             <span class="reel-count-badge">Reel ${this.currentLessonIndex + 1} of ${totalReels}</span>
@@ -77,174 +225,48 @@ class SkillReelViewer {
           </div>
           <div class="reel-progress-pills">
             ${curr.lessons.map((_, idx) => `
-              <div class="progress-pill ${idx === this.currentLessonIndex ? 'active' : ''} ${idx < this.currentLessonIndex ? 'completed' : ''}"
-                   onclick="reelViewer.jumpToReel(${idx})" title="Reel ${idx + 1}"></div>
+              <div class="progress-pill ${idx === this.currentLessonIndex ? 'active' : ''}"></div>
             `).join('')}
           </div>
         </div>
 
-        <!-- VIDEO PLAYER BOX -->
         <div class="reel-video-container">
-          <iframe id="reelIframe"
-                  src="https://www.youtube-nocookie.com/embed/${lesson.video_id}?rel=0&modestbranding=1&enablejsapi=1"
-                  title="${lesson.title}"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen>
-          </iframe>
+          <iframe id="activeReelFrame" src="https://www.youtube.com/embed/${lesson.video_id}?autoplay=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
 
-        <!-- REEL METADATA & NAV CONTROLS -->
-        <div class="reel-controls-bar">
-          <button class="btn-reel-nav" ${this.currentLessonIndex === 0 ? 'disabled' : ''} onclick="reelViewer.prevReel()">
-            ◀ Prev Reel
-          </button>
-          
-          <button class="btn-phone-shortcut" onclick="reelViewer.savePhoneShortcut('${curr.id}')" title="Save link shortcut on phone">
-            📲 Add Shortcut
-          </button>
-
-          <button class="btn-reel-nav primary" ${this.currentLessonIndex === totalReels - 1 ? 'disabled' : ''} onclick="reelViewer.nextReel()">
-            Next Reel ▶
-          </button>
-        </div>
-
-        <!-- LESSON TITLE & SUBTITLE -->
-        <div class="reel-info-box">
-          <h2 class="reel-title">${lesson.title}</h2>
+        <div class="reel-content-details">
+          <h3 class="reel-title">${lesson.title}</h3>
           <p class="reel-subtitle">${lesson.subtitle}</p>
-        </div>
 
-        <!-- DIRECT URL-LINK BOX -->
-        <div class="url-link-box" style="margin-top: 10px; margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 16px;">
-          <label style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 6px;">
-            🔗 URL-LINK
-          </label>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" readonly value="https://skillpedia.pages.dev/reel.html?qp=${curr.id}" 
-                   onclick="this.select()"
-                   id="courseUrlInput"
-                   style="flex: 1; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-subtle); color: var(--accent-cyan); font-size: 12px; padding: 8px 12px; border-radius: 8px; font-family: monospace; font-weight: 600;">
-            <button onclick="reelViewer.copyCourseLink('${curr.id}')" 
-                    style="background: var(--accent-cyan-bg); border: 1px solid var(--accent-cyan-border); color: var(--accent-cyan); border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-              📋 Copy URL-Link
-            </button>
+          <div class="pc-checklist">
+            <h4>Performance Criteria (PCs)</h4>
+            ${lesson.pcs.map(pc => `
+              <div class="pc-item">
+                <span>${pc}</span>
+              </div>
+            `).join('')}
           </div>
         </div>
 
-        <!-- PERFORMANCE CRITERIA (PC) CHECKLIST -->
-        <div class="pc-checklist-card">
-          <div class="pc-card-header">
-            <h3>📋 Performance Criteria (PC) Checklist</h3>
-            <span class="pc-progress-count" id="pcCompletedCount">0 / ${lesson.pcs.length} Completed</span>
-          </div>
-
-          <div class="pc-list">
-            ${lesson.pcs.map((pcText, pcIdx) => {
-              const isChecked = savedProgress.includes(pcIdx);
-              return `
-                <label class="pc-item ${isChecked ? 'checked' : ''}">
-                  <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="reelViewer.togglePCCheck('${curr.id}', '${lesson.id}', ${pcIdx}, this)">
-                  <span class="pc-text">${pcText}</span>
-                </label>
-              `;
-            }).join('')}
-          </div>
+        <div class="reel-nav-buttons" style="display: flex; gap: 10px; margin-top: 16px;">
+          <button class="btn-secondary" onclick="reelViewer.prevLesson()" ${this.currentLessonIndex === 0 ? 'disabled' : ''}>← Previous Reel</button>
+          <button class="btn-primary" onclick="reelViewer.nextLesson()" ${this.currentLessonIndex === totalReels - 1 ? 'disabled' : ''}>Next Reel →</button>
         </div>
-
-        <!-- FOOTER & REPORT SAFETY BUTTON -->
-        <div class="reel-footer-actions">
-          <button class="btn-report-safety" onclick="reelViewer.reportSafetyModal('${curr.id}')">
-            🚩 Report Inappropriate Content
-          </button>
-        </div>
-
       </div>
     `;
-
-    this.updatePCCount(savedProgress.length, lesson.pcs.length);
   }
 
-  copyCourseLink(currId) {
-    const url = `https://skillpedia.pages.dev/reel.html?qp=${currId}`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(url);
-      alert(`🔗 URL-Link Copied to Clipboard!\n\n${url}`);
-    } else {
-      alert(`🔗 URL-Link:\n${url}`);
+  nextLesson() {
+    if (this.currentCurriculum && this.currentLessonIndex < this.currentCurriculum.lessons.length - 1) {
+      this.currentLessonIndex++;
+      this.renderViewer(document.getElementById('sideInspector'));
     }
   }
 
-  jumpToReel(index) {
-    if (index >= 0 && index < this.currentCurriculum.lessons.length) {
-      this.currentLessonIndex = index;
-      const container = this._container || document.getElementById('sideInspector');
-      if (container) this.renderViewer(container);
-    }
-  }
-
-  nextReel() {
-    this.jumpToReel(this.currentLessonIndex + 1);
-  }
-
-  prevReel() {
-    this.jumpToReel(this.currentLessonIndex - 1);
-  }
-
-  togglePCCheck(currId, lessonId, pcIdx, checkboxElem) {
-    const key = `pc_prog_${currId}_${lessonId}`;
-    let saved = JSON.parse(localStorage.getItem(key) || '[]');
-    
-    if (checkboxElem.checked) {
-      if (!saved.includes(pcIdx)) saved.push(pcIdx);
-      checkboxElem.closest('.pc-item').classList.add('checked');
-    } else {
-      saved = saved.filter(i => i !== pcIdx);
-      checkboxElem.closest('.pc-item').classList.remove('checked');
-    }
-
-    localStorage.setItem(key, JSON.stringify(saved));
-    const totalPcs = this.currentCurriculum.lessons[this.currentLessonIndex].pcs.length;
-    this.updatePCCount(saved.length, totalPcs);
-  }
-
-  getLessonProgress(currId, lessonId) {
-    const key = `pc_prog_${currId}_${lessonId}`;
-    return JSON.parse(localStorage.getItem(key) || '[]');
-  }
-
-  updatePCCount(completed, total) {
-    const countElem = document.getElementById('pcCompletedCount');
-    if (countElem) {
-      countElem.textContent = `${completed} / ${total} Completed`;
-    }
-  }
-
-  savePhoneShortcut(currId) {
-    const url = `https://skillpedia.pages.dev/reel.html?qp=${currId}`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(url);
-      alert(`📲 Shortcut Link Copied!\n\nLink: ${url}\n\nOpen this link on your phone browser and tap "Add to Home Screen" to install direct access.`);
-    } else {
-      alert(`📲 Save this link as a phone shortcut:\n${url}`);
-    }
-  }
-
-  reportSafetyModal(currId) {
-    const reason = prompt("🚩 Report Inappropriate Content:\n\nPlease specify the reason for reporting this reel (e.g. offensive video, safety violation, non-vocational content):");
-    if (reason && reason.trim()) {
-      dbClient.reportContent(currId, reason.trim());
-      alert("Thank you. Your report has been submitted for safety review.");
-    }
-  }
-
-  exitLearnerMode() {
-    document.body.classList.remove('learner-mode');
-    window.history.pushState({}, '', window.location.pathname);
-    const sideInspector = document.getElementById('sideInspector');
-    if (sideInspector) sideInspector.classList.add('hidden');
-    if (typeof switchSection === 'function') {
-      const tabs = document.querySelectorAll('.nav-tab-btn');
-      if (tabs.length > 0) switchSection('sectionNSQF', tabs[0]);
+  prevLesson() {
+    if (this.currentCurriculum && this.currentLessonIndex > 0) {
+      this.currentLessonIndex--;
+      this.renderViewer(document.getElementById('sideInspector'));
     }
   }
 }

@@ -218,14 +218,11 @@ async function buildReelCurriculum(topicText) {
   if (btn) btn.disabled = true;
 
   try {
-    const curriculum = await aiEngine.generate11ReelCurriculum(topicText, () => {});
-    const formatted = formatStandardizedCurriculum(curriculum);
-
-    await dbClient.saveCurriculum(formatted);
-    renderUnifiedCatalogue();
-
-    if (input) input.value = formatted.title;
-    reelViewer.loadReelPackage(formatted);
+    const curriculum = await aiEngine.generate11ReelCurriculum(topicText, () => {}, true);
+    
+    // Open the Interactive Creator Confirmation Studio for step-by-step review
+    console.log(`[APP] Opening Creator 11-Reel Confirmation Studio for "${curriculum.title}"...`);
+    reelViewer.openCreatorConfirmationStudio(curriculum);
   } catch (err) {
     if (errorMsg) {
       errorMsg.textContent = `⚠️ ${err.message}`;

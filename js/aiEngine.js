@@ -72,21 +72,79 @@ class AICurriculumEngine {
       const stepQuery = `${cleanTopic} ${les.title.replace(/^Reel \d+:\s*/i, '')}`;
       onProgress(3, `Indexing YouTube Reel ${idx + 1}/11: "${les.title.substring(0, 30)}..."`, 60 + Math.round((idx / 11) * 35));
       
-      const searchedVideoId = await this.searchLiveYouTubeVideo(stepQuery, cleanTopic);
-      const finalVideoId = searchedVideoId || les.video_id || 'UB1O30fR-EE';
-      console.log(`  [AI] Reel ${idx + 1}: Query="${stepQuery}" → Video ID="${finalVideoId}"`);
+      const candidates = await this.searchLiveYouTubeVideoCandidates(stepQuery);
+      const topVid = (candidates && candidates.length > 0) ? candidates[0].video_id : (les.video_id || 'UB1O30fR-EE');
+      console.log(`  [AI] Reel ${idx + 1}: Query="${stepQuery}" → Top Video ID="${topVid}" (${candidates.length} candidates)`);
 
       return {
         ...les,
-        video_id: finalVideoId
+        video_id: topVid,
+        candidates: candidates.length > 0 ? candidates : [{ video_id: topVid, title: les.title }]
       };
     }));
 
     llmResult.lessons = lessonsWithVideos;
+    onProgress(4, '11 Reel Candidates Ready for Creator Studio Confirmation!', 100);
+    return llmResult;
+  }
 
-    // 5. FINALIZE & SAVE TO TURSO EDGE DATABASE CLOUD
-    onProgress(4, 'Syncing 11 Verified Reels to Turso Edge DB...', 100);
-    return await this.finalizeAndSave(cleanTopic, formattedTitle, llmResult, onProgress);
+  /**
+   * Real-Time Video Search Engine: Queries YouTube live index via DuckDuckGo Video API proxy
+   * Returns up to 3 top-rated candidate YouTube videos for any query string.
+   */
+  async searchLiveYouTubeVideoCandidates(searchQuery) {
+    if (!searchQuery || typeof searchQuery !== 'string') return [];
+
+    try {
+      const q = encodeURIComponent(`${searchQuery} youtube tutorial`);
+      const tokenUrl = `https://duckduckgo.com/?q=${q}&t=h_&iax=videos&ia=videos`;
+      const ctrl = new AbortController();
+      const timeoutId = setTimeout(() => ctrl.abort(), 3500);
+
+      const htmlRes = await fetch(tokenUrl, { signal: ctrl.signal });
+      clearTimeout(timeoutId);
+      if (!htmlRes.ok) return [];
+
+      const htmlText = await htmlRes.text();
+      const vqdMatch = htmlText.match(/vqd=([\d-]+)/);
+      if (!vqdMatch) return [];
+
+      const vqd = vqdMatch[1];
+      const videoApiUrl = `https://duckduckgo.com/v.js?q=${q}&vqd=${vqd}&p=1`;
+      
+      const ctrl2 = new AbortController();
+      const timeoutId2 = setTimeout(() => ctrl2.abort(), 3500);
+      const jsonRes = await fetch(videoApiUrl, { signal: ctrl2.signal });
+      clearTimeout(timeoutId2);
+
+      if (!jsonRes.ok) return [];
+      const data = await jsonRes.json();
+
+      const candidates = [];
+      if (data && Array.isArray(data.results) && data.results.length > 0) {
+        for (const item of data.results) {
+          if (candidates.length >= 3) break;
+          if (item.content && item.content.includes('youtube.com')) {
+            const matches = item.content.match(/(?:v=|\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            if (matches && matches[1]) {
+              const vid = matches[1];
+              const isValid = await this.validateVideoId(vid);
+              if (isValid && !candidates.some(c => c.video_id === vid)) {
+                candidates.push({ video_id: vid, title: item.title || searchQuery });
+              }
+            }
+          }
+        }
+      }
+      return candidates;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  async searchLiveYouTubeVideo(searchQuery) {
+    const candidates = await this.searchLiveYouTubeVideoCandidates(searchQuery);
+    return (candidates && candidates.length > 0) ? candidates[0].video_id : null;
   }
 
   /**
