@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('%c[APP] DOMContentLoaded — Pure Cloud Mode', 'color: #22d3ee; font-weight: bold');
   initPWA();
   initTheme();
+  if (typeof authClient !== 'undefined') authClient.updateUI();
   handleUrlParameters();
   renderUnifiedCatalogue();
   setupUniversalSearch();
