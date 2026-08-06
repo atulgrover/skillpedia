@@ -1,5 +1,6 @@
 /**
  * SkillPedia Standardized Data Schemas
+ * 🔍 EXTENSIVE DEBUG LOGGING ENABLED
  */
 
 const CURRICULUM_TYPES = {
@@ -23,19 +24,42 @@ function validateCurriculum(data) {
  * Formats a raw curriculum object into the standardized 11-reel format
  */
 function formatStandardizedCurriculum(raw) {
-  const rawLessons = raw.lessons || [];
-  const lessons = rawLessons.slice(0, REEL_STANDARD_COUNT).map((lesson, idx) => ({
-    id: lesson.id || `les_${idx + 1}`,
-    reel_index: idx + 1,
-    nos_code: lesson.nos_code || `MODULE-${String(idx + 1).padStart(2, '0')}`,
-    title: lesson.title || `Lesson ${idx + 1}`,
-    subtitle: lesson.subtitle || 'Skill learning objective',
-    video_platform: lesson.video_platform || 'youtube',
-    video_id: (lesson.video_id && lesson.video_id !== 'mQ-05b1b4vA' && lesson.video_id !== 'Vk6d0lzAtaQ') ? lesson.video_id : 'arj7oStGLkU',
-    pcs: Array.isArray(lesson.pcs) ? lesson.pcs : ['PC1. Demonstrate basic technique cleanly and safely.']
-  }));
+  console.log(`%c[SCHEMA] formatStandardizedCurriculum() called`, 'color: #f59e0b; font-weight: bold');
+  console.log(`  [SCHEMA] Input: id="${raw.id}" title="${raw.title}" type="${raw.type}"`);
+  console.log(`  [SCHEMA] Input lessons count: ${raw.lessons?.length || 0}`);
+  
+  if (raw.lessons) {
+    raw.lessons.forEach((l, i) => {
+      console.log(`  [SCHEMA] INPUT lesson[${i}]: video_id="${l.video_id}" title="${l.title?.substring(0, 50)}"`);
+    });
+  }
 
-  return {
+  const rawLessons = raw.lessons || [];
+  const lessons = rawLessons.slice(0, REEL_STANDARD_COUNT).map((lesson, idx) => {
+    const originalVideoId = lesson.video_id;
+    const isBlacklisted = originalVideoId === 'mQ-05b1b4vA' || originalVideoId === 'Vk6d0lzAtaQ';
+    const finalVideoId = (originalVideoId && !isBlacklisted) ? originalVideoId : 'arj7oStGLkU';
+    
+    if (isBlacklisted) {
+      console.warn(`  [SCHEMA] ⚠️ lesson[${idx}]: BLACKLISTED video_id "${originalVideoId}" → replaced with fallback "arj7oStGLkU"`);
+    }
+    if (finalVideoId !== originalVideoId) {
+      console.warn(`  [SCHEMA] ⚠️ lesson[${idx}]: video_id CHANGED: "${originalVideoId}" → "${finalVideoId}"`);
+    }
+
+    return {
+      id: lesson.id || `les_${idx + 1}`,
+      reel_index: idx + 1,
+      nos_code: lesson.nos_code || `MODULE-${String(idx + 1).padStart(2, '0')}`,
+      title: lesson.title || `Lesson ${idx + 1}`,
+      subtitle: lesson.subtitle || 'Skill learning objective',
+      video_platform: lesson.video_platform || 'youtube',
+      video_id: finalVideoId,
+      pcs: Array.isArray(lesson.pcs) ? lesson.pcs : ['PC1. Demonstrate basic technique cleanly and safely.']
+    };
+  });
+
+  const result = {
     id: raw.id || `CURR-${Date.now()}`,
     type: raw.type || CURRICULUM_TYPES.CUSTOM_AI,
     title: raw.title || 'Custom Skill Course',
@@ -47,4 +71,12 @@ function formatStandardizedCurriculum(raw) {
     lessons: lessons,
     created_at: raw.created_at || new Date().toISOString()
   };
+
+  console.log(`%c[SCHEMA] formatStandardizedCurriculum() OUTPUT:`, 'color: #f59e0b; font-weight: bold');
+  console.log(`  [SCHEMA] id="${result.id}" title="${result.title}" lessons=${result.lessons.length}`);
+  result.lessons.forEach((l, i) => {
+    console.log(`  [SCHEMA] OUTPUT lesson[${i}]: video_id="${l.video_id}" title="${l.title?.substring(0, 50)}"`);
+  });
+
+  return result;
 }

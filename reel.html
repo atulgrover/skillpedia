@@ -552,7 +552,12 @@
        INIT
        ===================================================== */
     async function initReelPage() {
+      console.log('%c[REEL] ========== initReelPage() START ==========', 'color: #ef4444; font-weight: bold; font-size: 14px');
+      console.log(`[REEL] qpId from URL params: "${qpId}"`);
+      console.log(`[REEL] Full URL: ${window.location.href}`);
+
       if (!qpId) {
+        console.error('[REEL] ❌ No qpId found in URL params');
         document.getElementById('reelPageLoading').innerHTML = `
           <div style="font-size:40px;margin-bottom:12px">📚</div>
           <span class="load-text">No skill course specified.</span>
@@ -561,21 +566,42 @@
       }
 
       try {
+        console.log('[REEL] Step 1: Calling dbClient.getCurriculumById...');
         const raw = await dbClient.getCurriculumById(qpId);
-        if (!raw) throw new Error('Course not found');
+        if (!raw) {
+          console.error(`[REEL] ❌ dbClient.getCurriculumById returned null for "${qpId}"`);
+          throw new Error('Course not found');
+        }
+        console.log(`[REEL] Step 2: Raw data received — id="${raw.id}" title="${raw.title}" lessons=${raw.lessons?.length}`);
+        raw.lessons?.forEach((l, i) => {
+          console.log(`  [REEL] RAW lesson[${i}]: video_id="${l.video_id}" title="${l.title?.substring(0, 50)}"`);
+        });
+
+        console.log('[REEL] Step 3: Calling formatStandardizedCurriculum...');
         curriculum = formatStandardizedCurriculum(raw);
+        console.log(`[REEL] Step 4: Formatted curriculum — id="${curriculum.id}" title="${curriculum.title}" lessons=${curriculum.lessons?.length}`);
+        curriculum.lessons?.forEach((l, i) => {
+          console.log(`  [REEL] FORMATTED lesson[${i}]: video_id="${l.video_id}" title="${l.title?.substring(0, 50)}"`);
+        });
+
+        console.log('[REEL] Step 5: Calling renderReels...');
         renderReels(curriculum);
         
         setTimeout(() => {
+          console.log(`[REEL] Step 6: setTimeout check — ytReady=${ytReady} typeof YT=${typeof YT}`);
           if (ytReady || typeof YT !== 'undefined') {
             ytReady = true;
+            console.log('[REEL] Step 7: Creating YouTube player for index 0...');
             createPlayerForIndex(0);
+          } else {
+            console.warn('[REEL] ⚠️ YT API not ready yet — player will mount when onYouTubeIframeAPIReady fires');
           }
         }, 100);
 
         document.getElementById('reelPageLoading').style.display = 'none';
+        console.log('%c[REEL] ========== initReelPage() COMPLETE ==========', 'color: #4ade80; font-weight: bold; font-size: 14px');
       } catch (err) {
-        console.error(err);
+        console.error('[REEL] ❌ initReelPage ERROR:', err);
         document.getElementById('reelPageLoading').innerHTML = `
           <div style="font-size:40px;margin-bottom:12px">😕</div>
           <span class="load-text">${err.message}</span>

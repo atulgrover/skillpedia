@@ -5,36 +5,51 @@
 let currentSectorFilter = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('%c[APP] ========== DOMContentLoaded START ==========', 'color: #22d3ee; font-weight: bold; font-size: 14px');
   initPWA();
   initTheme();
   sanitizeCachedCurricula();
   handleUrlParameters();
   renderUnifiedCatalogue();
   setupUniversalSearch();
+  console.log('%c[APP] ========== DOMContentLoaded COMPLETE ==========', 'color: #22d3ee; font-weight: bold; font-size: 14px');
 });
 
 function sanitizeCachedCurricula() {
+  console.log('%c[APP] sanitizeCachedCurricula() START', 'color: #f97316; font-weight: bold; font-size: 13px');
   const key = 'skillpedia_cached_curricula';
   const cached = JSON.parse(localStorage.getItem(key) || '[]');
-  if (!Array.isArray(cached) || cached.length === 0) return;
+  console.log(`[APP] sanitizeCachedCurricula: Found ${cached.length} cached items in localStorage`);
+  if (!Array.isArray(cached) || cached.length === 0) {
+    console.log('[APP] sanitizeCachedCurricula: Empty cache, nothing to sanitize');
+    return;
+  }
 
   let modified = false;
   const updated = cached.map(item => {
     const isCustom = item.type === 'custom_ai' || (item.id && item.id.startsWith('CUSTOM-')) || item.sector === 'Custom Micro-Learning';
     const isCargoTopic = (item.title || '').toLowerCase().includes('cargo') || (item.title || '').toLowerCase().includes('aircraft');
 
+    console.log(`[APP] sanitize item: id="${item.id}" title="${item.title}" isCustom=${isCustom} isCargoTopic=${isCargoTopic}`);
+
     if (isCustom && !isCargoTopic && Array.isArray(item.lessons)) {
       const topic = item.title || 'General';
+      console.log(`  [APP] ⚠️ SANITIZING custom skill "${topic}" — calling getVerifiedVideoPool...`);
       const verifiedPool = aiEngine.getVerifiedVideoPool(topic);
+      console.log(`  [APP] getVerifiedVideoPool returned ${verifiedPool.length} videos, first="${verifiedPool[0]?.video_id}"`);
+
       item.lessons = item.lessons.map((les, idx) => {
         const correctVid = verifiedPool[idx % verifiedPool.length].video_id;
-        if (les.video_id !== correctVid) {
+        const currentVid = les.video_id;
+        if (currentVid !== correctVid) {
+          console.warn(`  [APP] ⚠️ REWRITING lesson[${idx}] video_id: "${currentVid}" → "${correctVid}" (FORCED by sanitizer)`);
           modified = true;
           return {
             ...les,
             video_id: correctVid
           };
         }
+        console.log(`  [APP] lesson[${idx}] video_id "${currentVid}" already correct ✅`);
         return les;
       });
     }
@@ -42,7 +57,10 @@ function sanitizeCachedCurricula() {
   });
 
   if (modified) {
+    console.warn(`%c[APP] sanitizeCachedCurricula: ⚠️ MODIFIED localStorage — saving updated cache`, 'color: #ef4444; font-weight: bold');
     localStorage.setItem(key, JSON.stringify(updated));
+  } else {
+    console.log('[APP] sanitizeCachedCurricula: No modifications needed ✅');
   }
 }
 

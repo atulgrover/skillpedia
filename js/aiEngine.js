@@ -11,34 +11,48 @@ class AICurriculumEngine {
    * @param {function} onProgress - Optional callback for live progress updates (step, msg, percent)
    */
   async generate11ReelCurriculum(topic, onProgress = () => {}, forceFresh = false) {
+    console.log(`%c[AI] generate11ReelCurriculum("${topic}", forceFresh=${forceFresh})`, 'color: #c084fc; font-weight: bold; font-size: 13px');
+
     // 1. Sanitize & check safety
     const safetyCheck = sanitizeAndCheckPrompt(topic);
     if (!safetyCheck.safe) {
+      console.error(`[AI] ❌ Safety check FAILED: ${safetyCheck.reason}`);
       throw new Error(safetyCheck.reason);
     }
+    console.log('[AI] ✅ Safety check passed');
 
     const cleanTopic = topic.trim();
     const formattedTitle = cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1);
+    console.log(`[AI] cleanTopic="${cleanTopic}" formattedTitle="${formattedTitle}"`);
 
     onProgress(1, 'Connecting to OpenRouter AI Engine...', 20);
 
     // 2. Check if pre-existing in Database first (ignore skeletons or if forceFresh is requested)
     if (!forceFresh) {
+      console.log('[AI] Step 2: Checking DB for pre-existing exact match...');
       const existing = await dbClient.searchCurricula(cleanTopic, '', 'custom_ai');
+      console.log(`[AI] Found ${existing.length} custom_ai results for "${cleanTopic}"`);
+      existing.forEach((c, i) => console.log(`  [AI] existing[${i}]: id="${c.id}" title="${c.title}" is_fallback=${c.is_fallback} lessons=${c.lessons?.length}`));
       const exactMatch = existing.find(c => c.title.toLowerCase() === cleanTopic.toLowerCase());
       if (exactMatch && !exactMatch.is_fallback && exactMatch.lessons && exactMatch.lessons.length === REEL_STANDARD_COUNT) {
+        console.log(`%c[AI] ✅ Pre-existing exact match found! Returning cached. firstVid="${exactMatch.lessons[0]?.video_id}"`, 'color: #4ade80; font-weight: bold');
         onProgress(4, 'Found pre-existing Skill Pack in DB!', 100);
         return exactMatch;
       }
+      console.log('[AI] No pre-existing exact match found, proceeding to LLM...');
     }
 
     // 3. Try real-time LLM synthesis via OpenRouter API with 12s max timeout
     const apiKey = window.OPENROUTER_API_KEY;
+    console.log(`[AI] Step 3: OpenRouter API key ${apiKey ? '✅ present' : '❌ MISSING'}`);
     if (apiKey) {
       try {
         onProgress(2, 'LLM Synthesizing 11 NOS Units & Performance Criteria...', 50);
         const llmResult = await this.callOpenRouterAPI(cleanTopic, apiKey, onProgress);
+        console.log(`[AI] LLM result: lessons=${llmResult?.lessons?.length || 0}`);
         if (llmResult && llmResult.lessons && llmResult.lessons.length === 11) {
+          console.log('[AI] LLM returned valid 11 lessons, formatting...');
+          llmResult.lessons.forEach((l, i) => console.log(`  [AI] LLM lesson[${i}]: video_id="${l.video_id}" title="${l.title?.substring(0, 40)}"`));
           onProgress(3, 'Curating & Mapping 11 YouTube Skill Reels...', 85);
           const formattedLLM = formatStandardizedCurriculum({
             id: `CUSTOM-${cleanTopic.toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 15)}-${Date.now().toString().slice(-4)}`,
@@ -53,14 +67,16 @@ class AICurriculumEngine {
 
           onProgress(4, 'Finalizing Custom Skill Pack & Syncing to Edge DB...', 100);
           await dbClient.saveCurriculum(formattedLLM);
+          console.log(`%c[AI] ✅ LLM curriculum saved! id="${formattedLLM.id}"`, 'color: #4ade80; font-weight: bold');
           return formattedLLM;
         }
       } catch (err) {
-        console.warn('OpenRouter API timeout/failure, executing fast structural synthesizer fallback:', err);
+        console.warn('[AI] ⚠️ OpenRouter API timeout/failure, falling back to structural synthesizer:', err.message);
       }
     }
 
     // 4. Fallback structural 11-reel generator if LLM times out or key missing
+    console.log(`%c[AI] Step 4: Using generateFallbackCurriculum for "${cleanTopic}"`, 'color: #fb923c; font-weight: bold');
     onProgress(4, 'Fast Structural 11-Reel Pack Synthesized!', 100);
     return this.generateFallbackCurriculum(cleanTopic, formattedTitle);
   }
@@ -72,8 +88,14 @@ class AICurriculumEngine {
    * each one via YouTube oEmbed before using it.
    */
   async callOpenRouterAPI(topic, apiKey, onProgress) {
+    console.log(`%c[AI] callOpenRouterAPI("${topic}")`, 'color: #818cf8; font-weight: bold');
     const hasKnownPool = this.hasKnownVideoPool(topic);
     const verifiedPool = hasKnownPool ? this.getVerifiedVideoPool(topic) : null;
+    console.log(`[AI] hasKnownVideoPool("${topic}"): ${hasKnownPool}`);
+    if (verifiedPool) {
+      console.log(`[AI] Using verified pool with ${verifiedPool.length} videos:`);
+      verifiedPool.forEach((v, i) => console.log(`  [AI] pool[${i}]: video_id="${v.video_id}" tag="${v.topic_tag}"`));
+    }
 
     // Build system prompt — different for known vs unknown topics
     const videoInstruction = hasKnownPool
@@ -184,7 +206,7 @@ Rules:
    */
   hasKnownVideoPool(topic) {
     const t = (topic || '').toLowerCase();
-    return (
+    const result = (
       t.includes('basil')   || t.includes('plant')   || t.includes('plantation')||
       t.includes('farm')    || t.includes('farming') || t.includes('garden')    ||
       t.includes('car')     || t.includes('drive')   || t.includes('driving')   ||
@@ -195,6 +217,8 @@ Rules:
       t.includes('barista') || t.includes('coffee')  || t.includes('espresso')  ||
       t.includes('drone')   || t.includes('uav')     || t.includes('flight')
     );
+    console.log(`[AI] hasKnownVideoPool("${topic}"): t="${t}" → ${result}`);
+    return result;
   }
 
   /**
@@ -254,9 +278,11 @@ Rules:
 
   getVerifiedVideoPool(topic) {
     const t = (topic || '').toLowerCase();
+    console.log(`%c[AI] getVerifiedVideoPool("${topic}") — t="${t}"`, 'color: #e879f9; font-weight: bold');
     
     // Real verified YouTube video IDs for Basil Plantation, Agriculture & Gardening:
     if (t.includes('basil') || t.includes('plant') || t.includes('plantation') || t.includes('farm') || t.includes('farming') || t.includes('garden')) {
+      console.log(`[AI] getVerifiedVideoPool: ✅ MATCHED → Basil/Agriculture pool`);
       return [
         { video_id: "8mJk604tK4E", topic_tag: "How to Grow Basil from Seeds & Cuttings" },
         { video_id: "o3vYmKzJgL0", topic_tag: "Soil Mix & Container Preparation for Herbs" },
@@ -374,7 +400,11 @@ Rules:
   }
 
   generateFallbackCurriculum(cleanTopic, formattedTitle) {
+    console.log(`%c[AI] generateFallbackCurriculum("${cleanTopic}", "${formattedTitle}")`, 'color: #fb923c; font-weight: bold; font-size: 13px');
     const verifiedPool = this.getVerifiedVideoPool(cleanTopic);
+    console.log(`[AI] generateFallbackCurriculum: Pool has ${verifiedPool.length} videos, first="${verifiedPool[0]?.video_id}"`);
+    verifiedPool.forEach((v, i) => console.log(`  [AI] fallbackPool[${i}]: video_id="${v.video_id}" tag="${v.topic_tag}"`));
+
     const stages = [
       { name: "Foundational Overview & Workspace Safety", nos: "SEC2/N0101" },
       { name: "Essential Tools, Equipment & Setup", nos: "SEC2/N0102" },
@@ -389,22 +419,27 @@ Rules:
       { name: "Practical Assessment & Mastery Verification", nos: "SEC2/N0502" }
     ];
 
-    const lessons = stages.map((stage, idx) => ({
-      id: `les_${idx + 1}`,
-      reel_index: idx + 1,
-      nos_code: stage.nos,
-      title: `Reel ${idx + 1}: ${stage.name}`,
-      subtitle: `Mastering ${formattedTitle} - Stage ${idx + 1} of 11`,
-      video_platform: 'youtube',
-      video_id: verifiedPool[idx % verifiedPool.length].video_id,
-      pcs: [
-        `PC1. Review safety standards for ${stage.name}.`,
-        `PC2. Execute ${stage.name} following standard operating procedures.`,
-        `PC3. Perform quality self-inspection against target benchmark standards.`,
-        `PC4. Log completed steps and document progress.`
-      ]
-    }));
+    const lessons = stages.map((stage, idx) => {
+      const vid = verifiedPool[idx % verifiedPool.length].video_id;
+      console.log(`  [AI] fallback lesson[${idx}]: assigning video_id="${vid}" (from pool index ${idx % verifiedPool.length})`);
+      return {
+        id: `les_${idx + 1}`,
+        reel_index: idx + 1,
+        nos_code: stage.nos,
+        title: `Reel ${idx + 1}: ${stage.name}`,
+        subtitle: `Mastering ${formattedTitle} - Stage ${idx + 1} of 11`,
+        video_platform: 'youtube',
+        video_id: vid,
+        pcs: [
+          `PC1. Review safety standards for ${stage.name}.`,
+          `PC2. Execute ${stage.name} following standard operating procedures.`,
+          `PC3. Perform quality self-inspection against target benchmark standards.`,
+          `PC4. Log completed steps and document progress.`
+        ]
+      };
+    });
 
+    console.log('[AI] generateFallbackCurriculum: Calling formatStandardizedCurriculum...');
     const newCurriculum = formatStandardizedCurriculum({
       id: `CUSTOM-${cleanTopic.toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 15)}-${Date.now().toString().slice(-4)}`,
       type: CURRICULUM_TYPES.CUSTOM_AI,
@@ -416,6 +451,9 @@ Rules:
       is_fallback: true,
       lessons: lessons
     });
+
+    console.log(`[AI] generateFallbackCurriculum: Final curriculum video IDs:`);
+    newCurriculum.lessons?.forEach((l, i) => console.log(`  [AI] FINAL lesson[${i}]: video_id="${l.video_id}"`));
 
     dbClient.saveCurriculum(newCurriculum);
     return newCurriculum;
