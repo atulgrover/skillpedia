@@ -286,15 +286,15 @@ Rules:
       return [
         { video_id: "8mJk604tK4E", topic_tag: "How to Grow Basil from Seeds & Cuttings" },
         { video_id: "o3vYmKzJgL0", topic_tag: "Soil Mix & Container Preparation for Herbs" },
-        { video_id: "a9j1fXn0Gvw", topic_tag: "Watering Schedule & Sunlight Requirements" },
-        { video_id: "9VbS3h12a8A", topic_tag: "Organic Pest Control & Companion Planting" },
-        { video_id: "y3yQx17A8lI", topic_tag: "Pruning & Pinching Basil for Bushy Growth" },
-        { video_id: "8s68gT30u9w", topic_tag: "Harvesting Basil Leaves for Maximum Yield" },
-        { video_id: "4o98F7tXkQA", topic_tag: "Hydroponic & Indoor Basil Plantation Setup" },
-        { video_id: "2b694Zq4oJg", topic_tag: "Seedling Transplanting & Spacing Technique" },
-        { video_id: "xLp7V4aQx48", topic_tag: "Commercial Herb Plantation & Irrigation" },
-        { video_id: "p1z_4O8q9rE", topic_tag: "Post-Harvest Drying & Storage Methods" },
-        { video_id: "q_6z9e8t4y0", topic_tag: "Disease Inspection & Root Health Maintenance" }
+        { video_id: "Y5uCKAfhEBE", topic_tag: "Watering Schedule & Plant Biology" },
+        { video_id: "GvYJpLlz3O0", topic_tag: "Organic Soil Science & Pest Defense" },
+        { video_id: "zL19uMsnpSU", topic_tag: "Pruning & Pinching Stems for Bushy Growth" },
+        { video_id: "Wsu-j06o6Yw", topic_tag: "Harvesting Basil Leaves & Essential Oils" },
+        { video_id: "IVCSoVFr-kY", topic_tag: "Hydroponics & Indoor LED Grow Lights" },
+        { video_id: "rStL7niR7gs", topic_tag: "Seedling Transplanting & Soil Care" },
+        { video_id: "VjnoGS_NKCY", topic_tag: "Commercial Herb Plantation & Drip Lines" },
+        { video_id: "UF8uR6Z6KLc", topic_tag: "Post-Harvest Drying & Storage Methods" },
+        { video_id: "IXi53cK9AQ8", topic_tag: "Disease Prevention & Nursery Management" }
       ];
     }
     
