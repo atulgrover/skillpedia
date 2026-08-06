@@ -377,14 +377,15 @@ class SkillPediaDB {
     console.log(`[DB] _backgroundUpgrade: Starting upgrade for "${rawTopic}" (${idOrCode})`);
     try {
       const upgraded = await aiEngine.generate11ReelCurriculum(rawTopic, () => {}, true);
-      if (upgraded) {
+      if (upgraded && !upgraded.is_fallback) {
         upgraded.id = idOrCode;
-        delete upgraded.is_fallback;
         await this.saveCurriculum(upgraded);
-        console.log(`%c[DB] _backgroundUpgrade: ✅ Upgrade complete for "${rawTopic}"`, 'color: #4ade80; font-weight: bold');
+        console.log(`%c[DB] _backgroundUpgrade: ✅ Real LLM upgrade complete for "${rawTopic}"`, 'color: #4ade80; font-weight: bold');
         upgraded.lessons?.forEach((l, i) => {
           console.log(`  [DB] upgraded lesson[${i}]: video_id="${l.video_id}"`);
         });
+      } else if (upgraded && upgraded.is_fallback) {
+        console.warn(`[DB] _backgroundUpgrade: ⚠️ Got fallback (not real LLM) — NOT saving over existing data for "${rawTopic}"`);
       }
     } catch (err) {
       console.warn('[DB] _backgroundUpgrade: ⚠️ Failed (non-critical):', err.message);

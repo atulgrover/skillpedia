@@ -34,24 +34,31 @@ function sanitizeCachedCurricula() {
 
     if (isCustom && !isCargoTopic && Array.isArray(item.lessons)) {
       const topic = item.title || 'General';
-      console.log(`  [APP] ⚠️ SANITIZING custom skill "${topic}" — calling getVerifiedVideoPool...`);
-      const verifiedPool = aiEngine.getVerifiedVideoPool(topic);
-      console.log(`  [APP] getVerifiedVideoPool returned ${verifiedPool.length} videos, first="${verifiedPool[0]?.video_id}"`);
+      
+      // FIX: Only sanitize if we have a KNOWN verified pool for this topic.
+      // Without this check, skills without a pool get the generic TED-Ed defaults forced onto them!
+      if (!aiEngine.hasKnownVideoPool(topic)) {
+        console.log(`  [APP] Skipping sanitization for "${topic}" — no known verified video pool`);
+      } else {
+        console.log(`  [APP] ✅ SANITIZING custom skill "${topic}" — has known verified pool`);
+        const verifiedPool = aiEngine.getVerifiedVideoPool(topic);
+        console.log(`  [APP] getVerifiedVideoPool returned ${verifiedPool.length} videos, first="${verifiedPool[0]?.video_id}"`);
 
-      item.lessons = item.lessons.map((les, idx) => {
-        const correctVid = verifiedPool[idx % verifiedPool.length].video_id;
-        const currentVid = les.video_id;
-        if (currentVid !== correctVid) {
-          console.warn(`  [APP] ⚠️ REWRITING lesson[${idx}] video_id: "${currentVid}" → "${correctVid}" (FORCED by sanitizer)`);
-          modified = true;
-          return {
-            ...les,
-            video_id: correctVid
-          };
-        }
-        console.log(`  [APP] lesson[${idx}] video_id "${currentVid}" already correct ✅`);
-        return les;
-      });
+        item.lessons = item.lessons.map((les, idx) => {
+          const correctVid = verifiedPool[idx % verifiedPool.length].video_id;
+          const currentVid = les.video_id;
+          if (currentVid !== correctVid) {
+            console.warn(`  [APP] ⚠️ REWRITING lesson[${idx}] video_id: "${currentVid}" → "${correctVid}" (FORCED by sanitizer)`);
+            modified = true;
+            return {
+              ...les,
+              video_id: correctVid
+            };
+          }
+          console.log(`  [APP] lesson[${idx}] video_id "${currentVid}" already correct ✅`);
+          return les;
+        });
+      }
     }
     return item;
   });
