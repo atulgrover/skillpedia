@@ -311,7 +311,7 @@ html, body {
   justify-content: space-between;
   gap: 14px;
   cursor: pointer;
-  transition: all 0.25 ease;
+  transition: all 0.25s ease;
   position: relative;
   overflow: hidden;
 }
