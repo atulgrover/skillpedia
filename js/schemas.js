@@ -38,13 +38,11 @@ function formatStandardizedCurriculum(raw) {
   const lessons = rawLessons.slice(0, REEL_STANDARD_COUNT).map((lesson, idx) => {
     const originalVideoId = lesson.video_id;
     const isBlacklisted = originalVideoId === 'mQ-05b1b4vA' || originalVideoId === 'Vk6d0lzAtaQ';
-    const finalVideoId = (originalVideoId && !isBlacklisted) ? originalVideoId : 'arj7oStGLkU';
-    
-    if (isBlacklisted) {
-      console.warn(`  [SCHEMA] ⚠️ lesson[${idx}]: BLACKLISTED video_id "${originalVideoId}" → replaced with fallback "arj7oStGLkU"`);
-    }
-    if (finalVideoId !== originalVideoId) {
-      console.warn(`  [SCHEMA] ⚠️ lesson[${idx}]: video_id CHANGED: "${originalVideoId}" → "${finalVideoId}"`);
+
+    if (!originalVideoId || isBlacklisted) {
+      const errMessage = `[Schema Integrity Error] Reel ${idx + 1} ("${lesson.title || 'Untitled'}") is missing a valid YouTube video ID!`;
+      console.error(`  [SCHEMA] ❌ ${errMessage}`);
+      throw new Error(errMessage);
     }
 
     return {
@@ -54,7 +52,7 @@ function formatStandardizedCurriculum(raw) {
       title: lesson.title || `Lesson ${idx + 1}`,
       subtitle: lesson.subtitle || 'Skill learning objective',
       video_platform: lesson.video_platform || 'youtube',
-      video_id: finalVideoId,
+      video_id: originalVideoId,
       pcs: Array.isArray(lesson.pcs) ? lesson.pcs : ['PC1. Demonstrate basic technique cleanly and safely.']
     };
   });

@@ -70,7 +70,12 @@ class AICurriculumEngine {
       onProgress(3, `Indexing YouTube Reel ${idx + 1}/11: "${les.title.substring(0, 30)}..."`, 60 + Math.round((idx / 11) * 35));
       
       const candidates = await this.searchLiveYouTubeVideoCandidates(stepQuery);
-      const topVid = (candidates && candidates.length > 0) ? candidates[0].video_id : (les.video_id || 'UB1O30fR-EE');
+      const topVid = (candidates && candidates.length > 0) ? candidates[0].video_id : (les.video_id || '');
+      
+      if (!topVid) {
+        throw new Error(`[Video Resolution Error] Could not find a verified YouTube video for Reel ${idx + 1}: "${les.title}". Query: "${stepQuery}"`);
+      }
+
       console.log(`  [AI] Reel ${idx + 1}: Query="${stepQuery}" → Top Video ID="${topVid}" (${candidates.length} candidates)`);
 
       return {
@@ -92,6 +97,36 @@ class AICurriculumEngine {
   async searchLiveYouTubeVideoCandidates(searchQuery) {
     if (!searchQuery || typeof searchQuery !== 'string') return [];
 
+    // 1. Try Cloudflare Pages Function serverless proxy first (/api/search-video)
+    try {
+      const proxyUrl = `/api/search-video?q=${encodeURIComponent(searchQuery)}`;
+      const ctrl = new AbortController();
+      const timeoutId = setTimeout(() => ctrl.abort(), 6000);
+
+      const proxyRes = await fetch(proxyUrl, { signal: ctrl.signal });
+      clearTimeout(timeoutId);
+
+      if (proxyRes.ok) {
+        const proxyData = await proxyRes.json();
+        if (proxyData && Array.isArray(proxyData.results) && proxyData.results.length > 0) {
+          const validCandidates = [];
+          for (const item of proxyData.results) {
+            const isValid = await this.validateVideoId(item.video_id);
+            if (isValid && !validCandidates.some(c => c.video_id === item.video_id)) {
+              validCandidates.push(item);
+            }
+          }
+          if (validCandidates.length > 0) {
+            console.log(`[AI] ✅ Cloudflare Worker Proxy returned ${validCandidates.length} video candidates for "${searchQuery}"`);
+            return validCandidates;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(`[AI] ⚠️ Cloudflare search-video proxy fetch failed/unavailable (${e.message}). Falling back to direct query...`);
+    }
+
+    // 2. Direct fetch fallback (for local development or environments without functions proxy)
     try {
       const q = encodeURIComponent(`${searchQuery} youtube tutorial`);
       const tokenUrl = `https://duckduckgo.com/?q=${q}&t=h_&iax=videos&ia=videos`;
