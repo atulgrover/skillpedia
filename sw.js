@@ -1,4 +1,4 @@
-const CACHE_NAME = 'skillpedia-v8.0-network-first';
+const CACHE_NAME = 'skillpedia-v10.0-network-first';
 const ASSETS_TO_CACHE = [
   './manifest.json',
   './css/portal.css',
@@ -7,7 +7,7 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing skillpedia-v8.0-network-first');
+  console.log('[SW] Installing skillpedia-v10.0-network-first');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -17,7 +17,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating skillpedia-v8.0-network-first & deleting old caches');
+  console.log('[SW] Activating skillpedia-v10.0-network-first & deleting old caches');
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
@@ -36,8 +36,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Bypass SW cache for Turso DB REST API or non-GET requests
-  if (url.hostname.includes('turso.io') || event.request.method !== 'GET') {
+  // Bypass Service Worker completely for external APIs (DuckDuckGo, OpenRouter, YouTube, Turso) & non-GET requests
+  if (url.origin !== location.origin || event.request.method !== 'GET') {
     return;
   }
 
