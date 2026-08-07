@@ -223,17 +223,36 @@ async function buildReelCurriculum(topicText) {
   if (errorMsg) errorMsg.style.display = 'none';
   if (btn) btn.disabled = true;
 
+  const terminal = document.getElementById('aiLogTerminal');
+
   if (progressModal) {
     if (progressTopic) progressTopic.textContent = `"${topicText}"`;
     if (progressBar) progressBar.style.width = '10%';
-    if (progressLog) progressLog.textContent = 'Synthesizing 11 NOS Units & Performance Criteria via AI...';
+    if (terminal) {
+      terminal.innerHTML = `<div style="color: #38bdf8; font-weight: 700;">🟢 [AI] Initializing 11-Reel Skill Curriculum Engine for "${topicText}"...</div>`;
+    }
     progressModal.classList.remove('hidden');
     progressModal.style.display = 'flex';
   }
 
   const updateProgress = (step, msg, percent = 50) => {
     if (progressBar) progressBar.style.width = `${percent}%`;
-    if (progressLog) progressLog.textContent = msg;
+    if (terminal) {
+      const timeStr = new Date().toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit', fractionalSecondDigits: 1 });
+      const newLogLine = document.createElement('div');
+      newLogLine.style.marginBottom = '3px';
+      
+      let icon = '⚡';
+      let color = '#a5f3fc';
+      if (percent < 40) { icon = '🧠'; color = '#c084fc'; }
+      else if (percent < 75) { icon = '🔎'; color = '#38bdf8'; }
+      else if (percent < 95) { icon = '🎯'; color = '#facc15'; }
+      else { icon = '✅'; color = '#4ade80'; }
+
+      newLogLine.innerHTML = `<span style="color: #64748b; font-size: 10px;">[${timeStr}]</span> <span style="color: ${color}; font-weight: 600;">${icon} ${msg}</span>`;
+      terminal.appendChild(newLogLine);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
   };
 
   try {
