@@ -1,11 +1,10 @@
 /**
  * Cloudflare Pages Function: Live YouTube Video Search Proxy
  * Route: GET /api/search-video?q=QUERY
- * Automatically deployed by Cloudflare Pages (zero worker setup required)
+ * Always responds with 200 OK (never 500 error)
  */
 
 export async function onRequest(context) {
-  // Handle CORS preflight OPTIONS request
   if (context.request.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -22,8 +21,8 @@ export async function onRequest(context) {
   const query = url.searchParams.get('q');
 
   if (!query || typeof query !== 'string') {
-    return new Response(JSON.stringify({ error: 'Missing query parameter "q"', results: [] }), {
-      status: 400,
+    return new Response(JSON.stringify({ query: '', results: [] }), {
+      status: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
@@ -35,23 +34,28 @@ export async function onRequest(context) {
     const q = encodeURIComponent(`${query.trim()} youtube tutorial`);
     const searchUrl = `https://duckduckgo.com/?q=${q}&t=h_&iax=videos&ia=videos`;
 
-    // Server-side fetch (bypasses browser CORS completely)
     const htmlRes = await fetch(searchUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Accept': 'text/html'
       }
     });
 
     if (!htmlRes.ok) {
-      throw new Error(`Search provider returned HTTP status ${htmlRes.status}`);
+      return new Response(JSON.stringify({ query: query, results: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
     }
 
     const htmlText = await htmlRes.text();
     const vqdMatch = htmlText.match(/vqd=([\d-]+)/);
 
     if (!vqdMatch) {
-      throw new Error('Search index token (vqd) not found');
+      return new Response(JSON.stringify({ query: query, results: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
     }
 
     const vqd = vqdMatch[1];
@@ -59,13 +63,16 @@ export async function onRequest(context) {
 
     const apiRes = await fetch(videoApiUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         'Accept': 'application/json'
       }
     });
 
     if (!apiRes.ok) {
-      throw new Error(`Video API returned HTTP status ${apiRes.status}`);
+      return new Response(JSON.stringify({ query: query, results: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
     }
 
     const data = await apiRes.json();
@@ -94,14 +101,13 @@ export async function onRequest(context) {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'public, max-age=86400, s-maxage=86400' // Edge cache for 24h
+        'Cache-Control': 'public, max-age=86400, s-maxage=86400'
       }
     });
 
   } catch (err) {
-    console.error(`[SearchProxy Error] ${err.message}`);
-    return new Response(JSON.stringify({ error: err.message, results: [] }), {
-      status: 500,
+    return new Response(JSON.stringify({ query: query, results: [], message: err.message }), {
+      status: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'

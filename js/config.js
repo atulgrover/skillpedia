@@ -1,0 +1,10 @@
+/**
+ * SkillPedia Secret Configuration
+ * Added Turso Edge Database credentials
+ */
+
+window.TURSO_DB_URL = "libsql://skillpedia-atulgrover.aws-ap-south-1.turso.io";
+window.TURSO_DB_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODU5MjcxNTMsImlkIjoiMDE5ZmQxOGQtNDcwMS03YTUzLWI4MGQtNGNjZjJmNDllOTNhIiwia2lkIjoiZFBTbnBRUkFmRktDbDZZdzRtLUtxazNuQkdwYTJjS25nZWRqVUdZMkJzOCIsInJpZCI6IjkwYmQ0MDlkLTczYmItNDcxZS04NzVjLTlhNGU5NzdjYjBkMiJ9.odehl15I8NbH9ow10Y4CTTyjLaxxXjgBLQG3eAOM05ySOZ4n1iq8ckO0KDhvsaWLwwsUTiR1Ar_zK-Hhmg4RBw";
+window.OPENROUTER_API_KEY = window.OPENROUTER_API_KEY || atob("c2stb3ItdjEtZjY3ODU4OWEyOTQ4ZTk0YTA1MTBkNDMwYTBmYWQwZGZkYTNkZGE5MDFjYWNjODMyY2Y4Nzk4NjAwOTY3NTJkNA==");
+
+

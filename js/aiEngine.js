@@ -45,13 +45,13 @@ class AICurriculumEngine {
 
     onProgress(1, `Synthesizing 11 NOS Units & Performance Criteria for "${formattedTitle}"...`, 35);
 
-    // 4. Fast High-Speed Primary Models Chain (Gemini Flash & Llama 3.1 8B first for speed!)
+    // Valid active free tier model slugs on OpenRouter
     const candidateModels = [
-      'google/gemini-2.0-flash-lite-001',
-      'meta-llama/llama-3.1-8b-instruct:free',
-      'openrouter/free',
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'google/gemini-2.0-flash-exp:free',
+      'deepseek/deepseek-r1:free',
       'qwen/qwen-2.5-7b-instruct:free',
-      'meta-llama/llama-3.3-70b-instruct:free'
+      'openrouter/auto'
     ];
 
     let llmResult = null;
