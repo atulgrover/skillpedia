@@ -83,6 +83,28 @@
 
         <div id="aiErrorMsg" class="error-banner" style="display: none; margin-bottom: 16px;"></div>
 
+        <!-- AI SYNTHESIS LIVE PROGRESS & SPINNER MODAL -->
+        <div id="aiProgressModal" class="modal-backdrop hidden" style="display: none; align-items: center; justify-content: center; z-index: 10000;">
+          <div class="modal-card" style="max-width: 480px; width: 90%; padding: 28px; background: var(--bg-drawer); border: 1px solid var(--accent-cyan-border); border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); text-align: center;">
+            <div style="position: relative; width: 64px; height: 64px; margin: 0 auto 20px auto;">
+              <div style="width: 64px; height: 64px; border: 4px solid rgba(56, 189, 248, 0.2); border-top: 4px solid var(--accent-cyan); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+              <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px;">✨</div>
+            </div>
+
+            <h3 style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin: 0 0 6px 0;">Building 11-Reel Skill Course</h3>
+            <p id="aiProgressTopicName" style="font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin: 0 0 16px 0;">"Tea Plantation"</p>
+
+            <div style="width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; margin-bottom: 16px;">
+              <div id="aiProgressBarFill" style="width: 15%; height: 100%; background: linear-gradient(90deg, #38bdf8, #c084fc); transition: width 0.3s ease;"></div>
+            </div>
+
+            <div id="aiProgressLogText" style="font-size: 13px; color: var(--text-secondary); background: var(--bg-card); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-subtle); font-family: inherit; min-height: 42px; display: flex; align-items: center; justify-content: center;">
+              Synthesizing 11 NOS Units & Performance Criteria...
+            </div>
+          </div>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+
         <!-- UNIFIED SKILL CARDS GRID & CATEGORY TABS -->
         <div>
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">

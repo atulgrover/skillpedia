@@ -207,24 +207,51 @@ function buildSearchedSkill() {
   }
 }
 
-/* AI SKILL BUILD ENGINE */
+/* AI SKILL BUILD ENGINE WITH LIVE PROGRESS SPINNER */
 async function buildReelCurriculum(topicText) {
   const input = document.getElementById('universalSearchInput');
   const aiBanner = document.getElementById('aiBuildBanner');
   const errorMsg = document.getElementById('aiErrorMsg');
   const btn = document.getElementById('btnBuildSkill');
 
+  const progressModal = document.getElementById('aiProgressModal');
+  const progressTopic = document.getElementById('aiProgressTopicName');
+  const progressBar = document.getElementById('aiProgressBarFill');
+  const progressLog = document.getElementById('aiProgressLogText');
+
   if (aiBanner) aiBanner.classList.add('hidden');
   if (errorMsg) errorMsg.style.display = 'none';
   if (btn) btn.disabled = true;
 
+  if (progressModal) {
+    if (progressTopic) progressTopic.textContent = `"${topicText}"`;
+    if (progressBar) progressBar.style.width = '10%';
+    if (progressLog) progressLog.textContent = 'Synthesizing 11 NOS Units & Performance Criteria via AI...';
+    progressModal.classList.remove('hidden');
+    progressModal.style.display = 'flex';
+  }
+
+  const updateProgress = (step, msg, percent = 50) => {
+    if (progressBar) progressBar.style.width = `${percent}%`;
+    if (progressLog) progressLog.textContent = msg;
+  };
+
   try {
-    const curriculum = await aiEngine.generate11ReelCurriculum(topicText, () => {}, true);
+    const curriculum = await aiEngine.generate11ReelCurriculum(topicText, updateProgress, true);
     
+    if (progressModal) {
+      progressModal.classList.add('hidden');
+      progressModal.style.display = 'none';
+    }
+
     // Open the Interactive Creator Confirmation Studio for step-by-step review
     console.log(`[APP] Opening Creator 11-Reel Confirmation Studio for "${curriculum.title}"...`);
     reelViewer.openCreatorConfirmationStudio(curriculum);
   } catch (err) {
+    if (progressModal) {
+      progressModal.classList.add('hidden');
+      progressModal.style.display = 'none';
+    }
     if (errorMsg) {
       errorMsg.textContent = `⚠️ ${err.message}`;
       errorMsg.style.display = 'block';
