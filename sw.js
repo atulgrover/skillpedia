@@ -1,4 +1,4 @@
-const CACHE_NAME = 'skillpedia-v7.0-network-first';
+const CACHE_NAME = 'skillpedia-v8.0-network-first';
 const ASSETS_TO_CACHE = [
   './manifest.json',
   './css/portal.css',
@@ -7,7 +7,7 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing skillpedia-v7.0-network-first');
+  console.log('[SW] Installing skillpedia-v8.0-network-first');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -17,7 +17,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating skillpedia-v7.0-network-first & deleting old caches');
+  console.log('[SW] Activating skillpedia-v8.0-network-first & deleting old caches');
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
