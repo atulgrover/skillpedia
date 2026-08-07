@@ -1,5 +1,7 @@
 /**
- * SkillPedia Database Client (Pure Turso Edge DB Cloud Source - Zero Browser Client Caching)
+ * SkillPedia Database Client (2-Table Normalized Edge DB Architecture)
+ * Table 1: skills_curriculum (Immutable NOS Educational Standards & PCs)
+ * Table 2: skill_reels_media (Dynamic Video Sources, Candidates & Multi-lingual Mappings)
  */
 
 const STORAGE_KEY_PACKAGES = 'skillpedia_cached_packages';
@@ -11,12 +13,11 @@ class SkillPediaDB {
       url: window.TURSO_DB_URL || '',
       authToken: window.TURSO_DB_TOKEN || ''
     };
-    console.log('%c[DB] SkillPediaDB initialized in Pure Cloud Mode (Zero Client Cache)', 'color: #38bdf8; font-weight: bold');
+    console.log('%c[DB] SkillPediaDB initialized in 2-Table Normalized Cloud Mode', 'color: #38bdf8; font-weight: bold');
     this.initLocalStore();
   }
 
   initLocalStore() {
-    // Purge any legacy client curricula cache from previous builds
     localStorage.removeItem('skillpedia_cached_curricula');
     localStorage.removeItem('skillpedia_cache_ver');
     
@@ -62,30 +63,59 @@ class SkillPediaDB {
   }
 
   /**
-   * Search for pre-built curricula directly from Turso Edge Database (Zero client cache).
+   * Search for pre-built curricula directly from Turso Edge Database (2-Table Model)
    */
-  async searchCurricula(query = '', sector = '', type = 'nsqf_official') {
+  async searchCurricula(query = '', sector = '', type = 'nsqf_official', language = 'en') {
     const cleanQuery = (query || '').toLowerCase().trim();
     const cleanSector = (sector || '').toLowerCase().trim();
 
-    console.log(`%c[DB] Direct Turso Cloud Search (query="${cleanQuery}", sector="${cleanSector}", type="${type}")`, 'color: #22d3ee; font-weight: bold');
+    console.log(`%c[DB] 2-Table Cloud Search (query="${cleanQuery}", sector="${cleanSector}", type="${type}", lang="${language}")`, 'color: #22d3ee; font-weight: bold');
 
     let items = [];
+    // 1. Fetch Educational Blueprints from Table 1 (skills_curriculum)
     const dbRes = await this.executeTursoPipeline([
-      { sql: "SELECT id, qp_code, type, version, title, subtitle, sector, nsqf_level, total_reels, lessons_json, created_at FROM curricula ORDER BY rowid DESC;" }
+      { sql: "SELECT skill_id, qp_code, type, version, title, subtitle, sector, nsqf_level, total_reels, nos_units_json, created_at FROM skills_curriculum ORDER BY created_at DESC;" },
+      { sql: "SELECT skill_id, reel_index, video_platform, video_id, candidates_json FROM skill_reels_media WHERE language = ? ORDER BY reel_index ASC;", args: [{ type: 'text', value: language }] }
     ]);
 
     if (dbRes && dbRes.results && dbRes.results[0] && dbRes.results[0].type === 'ok') {
-      const rows = dbRes.results[0].response.result.rows || [];
-      items = rows.map(r => {
-        let lessons = [];
-        try {
-          lessons = JSON.parse(r[9]?.value || '[]');
-        } catch (e) {
-          console.error('[DB] JSON parse error on lessons_json:', e);
-        }
+      const currRows = dbRes.results[0].response.result.rows || [];
+      const mediaRows = (dbRes.results[1] && dbRes.results[1].type === 'ok') ? (dbRes.results[1].response.result.rows || []) : [];
+
+      // Map media by skill_id
+      const mediaMap = {};
+      mediaRows.forEach(m => {
+        const sId = m[0]?.value;
+        const idx = Number(m[1]?.value);
+        if (!mediaMap[sId]) mediaMap[sId] = {};
+        let candidates = [];
+        try { candidates = JSON.parse(m[4]?.value || '[]'); } catch (_) {}
+        mediaMap[sId][idx] = {
+          video_platform: m[2]?.value || 'youtube',
+          video_id: m[3]?.value || '',
+          candidates: candidates
+        };
+      });
+
+      items = currRows.map(r => {
+        const sId = r[0]?.value;
+        let nosUnits = [];
+        try { nosUnits = JSON.parse(r[9]?.value || '[]'); } catch (e) { console.error('[DB] JSON parse error:', e); }
+
+        // Hydrate lessons with video mapping from Table 2 (skill_reels_media)
+        const lessons = nosUnits.map((nos, i) => {
+          const reelIdx = i + 1;
+          const media = mediaMap[sId]?.[reelIdx] || { video_platform: 'youtube', video_id: '', candidates: [] };
+          return {
+            ...nos,
+            video_platform: media.video_platform,
+            video_id: media.video_id,
+            candidates: media.candidates
+          };
+        });
+
         return {
-          id: r[0]?.value,
+          id: sId,
           qp_code: r[1]?.value,
           type: r[2]?.value,
           version: r[3]?.value,
@@ -100,7 +130,7 @@ class SkillPediaDB {
       });
     }
 
-    // Offline fallback to official static mock data if Turso network unavailable
+    // Offline fallback to MOCK_QPS if database response is empty
     if (items.length === 0 && typeof MOCK_QPS !== 'undefined') {
       items = MOCK_QPS;
     }
@@ -116,7 +146,6 @@ class SkillPediaDB {
         (item.title && item.title.toLowerCase().includes(cleanQuery)) ||
         (item.subtitle && item.subtitle.toLowerCase().includes(cleanQuery)) ||
         (item.sector && item.sector.toLowerCase().includes(cleanQuery)) ||
-        (item.sub_sector && item.sub_sector.toLowerCase().includes(cleanQuery)) ||
         (item.qp_code && item.qp_code.toLowerCase().includes(cleanQuery));
 
       const matchesSector = !cleanSector || cleanSector === 'all' || 
@@ -127,9 +156,11 @@ class SkillPediaDB {
   }
 
   /**
-   * Save a new 11-reel curriculum directly to Turso Edge DB cloud (Zero browser client caching)
+   * Save a new 11-reel curriculum to Turso Edge DB using the 2-Table Normalized Schema
+   * Table 1: skills_curriculum (NOS units & PCs)
+   * Table 2: skill_reels_media (Reel Video IDs & Candidates)
    */
-  async saveCurriculum(curriculum) {
+  async saveCurriculum(curriculum, language = 'en') {
     if (!curriculum || !curriculum.id) return curriculum;
 
     // Attach Creator Audit Trail
@@ -140,69 +171,138 @@ class SkillPediaDB {
       curriculum.creator_name = currentUser.full_name;
     }
 
-    console.log(`%c[DB] Direct Turso UPSERT for: "${curriculum.title}" (${curriculum.id}) by Creator: "${curriculum.creator_email || 'System'}"`, 'color: #4ade80; font-weight: bold');
+    console.log(`%c[DB] 2-Table UPSERT for: "${curriculum.title}" (${curriculum.id})`, 'color: #4ade80; font-weight: bold');
 
-    const lessonsJson = JSON.stringify(curriculum.lessons || []);
+    const lessons = curriculum.lessons || [];
 
-    const res = await this.executeTursoPipeline([{
-      sql: `INSERT INTO curricula (id, qp_code, type, version, title, subtitle, sector, nsqf_level, total_reels, lessons_json, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-              title = excluded.title,
-              subtitle = excluded.subtitle,
-              sector = excluded.sector,
-              lessons_json = excluded.lessons_json;`,
-      args: [
-        { type: 'text', value: curriculum.id },
-        { type: 'text', value: curriculum.qp_code || curriculum.id },
-        { type: 'text', value: curriculum.type || 'custom_ai' },
-        { type: 'text', value: curriculum.version || '1.0' },
-        { type: 'text', value: curriculum.title || '' },
-        { type: 'text', value: curriculum.subtitle || '' },
-        { type: 'text', value: curriculum.sector || 'Custom Micro-Learning' },
-        { type: 'integer', value: String(curriculum.nsqf_level || 3) },
-        { type: 'integer', value: String(curriculum.total_reels || 11) },
-        { type: 'text', value: lessonsJson },
-        { type: 'text', value: curriculum.created_at || new Date().toISOString() }
-      ]
-    }]);
+    // 1. Separate NOS Units (Table 1) from Video IDs
+    const nosUnits = lessons.map((les, idx) => ({
+      id: les.id || `les_${idx + 1}`,
+      reel_index: idx + 1,
+      nos_code: les.nos_code || `MODULE-${String(idx + 1).padStart(2, '0')}`,
+      title: les.title || `Lesson ${idx + 1}`,
+      subtitle: les.subtitle || '',
+      pcs: Array.isArray(les.pcs) ? les.pcs : []
+    }));
+
+    const nosUnitsJson = JSON.stringify(nosUnits);
+
+    // 2. Prepare Table 1 Statement (skills_curriculum)
+    const pipelineStmts = [
+      {
+        sql: `INSERT INTO skills_curriculum (skill_id, qp_code, type, version, title, subtitle, sector, nsqf_level, total_reels, nos_units_json, created_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              ON CONFLICT(skill_id) DO UPDATE SET
+                title = excluded.title,
+                subtitle = excluded.subtitle,
+                sector = excluded.sector,
+                nos_units_json = excluded.nos_units_json;`,
+        args: [
+          { type: 'text', value: curriculum.id },
+          { type: 'text', value: curriculum.qp_code || curriculum.id },
+          { type: 'text', value: curriculum.type || 'custom_ai' },
+          { type: 'text', value: curriculum.version || '1.0' },
+          { type: 'text', value: curriculum.title || '' },
+          { type: 'text', value: curriculum.subtitle || '' },
+          { type: 'text', value: curriculum.sector || 'Custom Micro-Learning' },
+          { type: 'integer', value: String(curriculum.nsqf_level || 3) },
+          { type: 'integer', value: String(curriculum.total_reels || 11) },
+          { type: 'text', value: nosUnitsJson },
+          { type: 'text', value: curriculum.created_at || new Date().toISOString() }
+        ]
+      }
+    ];
+
+    // 3. Prepare Table 2 Statements (skill_reels_media for 11 reels)
+    lessons.forEach((les, idx) => {
+      const reelIndex = idx + 1;
+      const mediaId = `${curriculum.id}_les_${reelIndex}_${language}`;
+      const candidatesJson = JSON.stringify(les.candidates || [{ video_id: les.video_id || '', title: les.title || '' }]);
+
+      pipelineStmts.push({
+        sql: `INSERT INTO skill_reels_media (id, skill_id, reel_index, video_platform, video_id, candidates_json, language, status, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+              ON CONFLICT(id) DO UPDATE SET
+                video_id = excluded.video_id,
+                candidates_json = excluded.candidates_json,
+                updated_at = excluded.updated_at;`,
+        args: [
+          { type: 'text', value: mediaId },
+          { type: 'text', value: curriculum.id },
+          { type: 'integer', value: String(reelIndex) },
+          { type: 'text', value: les.video_platform || 'youtube' },
+          { type: 'text', value: les.video_id || '' },
+          { type: 'text', value: candidatesJson },
+          { type: 'text', value: language },
+          { type: 'text', value: 'verified' },
+          { type: 'text', value: new Date().toISOString() }
+        ]
+      });
+    });
+
+    const res = await this.executeTursoPipeline(pipelineStmts);
 
     if (res) {
-      console.log(`[DB] ✅ Turso Edge DB UPSERT successful for: ${curriculum.title} (Creator Audit Trail Logged)`);
+      console.log(`[DB] ✅ 2-Table Turso Edge UPSERT successful for: "${curriculum.title}"`);
     }
 
     return curriculum;
   }
 
   /**
-   * Get a specific curriculum by ID or QP Code directly from Turso Edge Database (Zero client caching).
+   * Get a specific curriculum by ID or QP Code using 2-Table JOIN query
    */
-  async getCurriculumById(idOrCode) {
+  async getCurriculumById(idOrCode, language = 'en') {
     if (!idOrCode) return null;
 
-    console.log(`%c[DB] Direct Turso Lookup for id="${idOrCode}"`, 'color: #f472b6; font-weight: bold');
+    console.log(`%c[DB] 2-Table Lookup for id="${idOrCode}" (lang="${language}")`, 'color: #f472b6; font-weight: bold');
 
-    // 1. Direct Turso Edge Database Lookup
-    const dbRes = await this.executeTursoPipeline([{
-      sql: "SELECT id, qp_code, type, version, title, subtitle, sector, nsqf_level, total_reels, lessons_json, created_at FROM curricula WHERE id = ? OR qp_code = ? LIMIT 1;",
-      args: [
-        { type: 'text', value: idOrCode },
-        { type: 'text', value: idOrCode }
-      ]
-    }]);
+    const dbRes = await this.executeTursoPipeline([
+      {
+        sql: "SELECT skill_id, qp_code, type, version, title, subtitle, sector, nsqf_level, total_reels, nos_units_json, created_at FROM skills_curriculum WHERE skill_id = ? OR qp_code = ? LIMIT 1;",
+        args: [{ type: 'text', value: idOrCode }, { type: 'text', value: idOrCode }]
+      },
+      {
+        sql: "SELECT reel_index, video_platform, video_id, candidates_json FROM skill_reels_media WHERE (skill_id = ? OR skill_id = (SELECT skill_id FROM skills_curriculum WHERE qp_code = ? LIMIT 1)) AND language = ? ORDER BY reel_index ASC;",
+        args: [{ type: 'text', value: idOrCode }, { type: 'text', value: idOrCode }, { type: 'text', value: language }]
+      }
+    ]);
 
     if (dbRes && dbRes.results && dbRes.results[0] && dbRes.results[0].type === 'ok') {
-      const rows = dbRes.results[0].response.result.rows || [];
-      if (rows.length > 0) {
-        const r = rows[0];
-        let lessons = [];
-        try { 
-          lessons = JSON.parse(r[9]?.value || '[]'); 
-        } catch (e) {
-          console.error('[DB] JSON parse error on lessons_json:', e);
-        }
+      const currRows = dbRes.results[0].response.result.rows || [];
+      if (currRows.length > 0) {
+        const r = currRows[0];
+        const skillId = r[0]?.value;
+        let nosUnits = [];
+        try { nosUnits = JSON.parse(r[9]?.value || '[]'); } catch (e) { console.error('[DB] JSON parse error:', e); }
+
+        const mediaRows = (dbRes.results[1] && dbRes.results[1].type === 'ok') ? (dbRes.results[1].response.result.rows || []) : [];
+        const mediaMap = {};
+        mediaRows.forEach(m => {
+          const idx = Number(m[0]?.value);
+          let candidates = [];
+          try { candidates = JSON.parse(m[3]?.value || '[]'); } catch (_) {}
+          mediaMap[idx] = {
+            video_platform: m[1]?.value || 'youtube',
+            video_id: m[2]?.value || '',
+            candidates: candidates
+          };
+        });
+
+        // Hydrate NOS units with video sources from Table 2
+        const hydratedLessons = nosUnits.map((nos, i) => {
+          const reelIdx = i + 1;
+          const media = mediaMap[reelIdx] || { video_platform: 'youtube', video_id: '', candidates: [] };
+          return {
+            ...nos,
+            video_platform: media.video_platform,
+            video_id: media.video_id,
+            candidates: media.candidates
+          };
+        });
+
         const fetched = {
-          id: r[0]?.value,
+          id: skillId,
           qp_code: r[1]?.value,
           type: r[2]?.value,
           version: r[3]?.value,
@@ -211,44 +311,49 @@ class SkillPediaDB {
           sector: r[6]?.value,
           nsqf_level: Number(r[7]?.value || 3),
           total_reels: Number(r[8]?.value || 11),
-          lessons: lessons,
+          lessons: hydratedLessons,
           created_at: r[10]?.value
         };
-        console.log(`%c[DB] ✅ FOUND IN TURSO DB: id="${fetched.id}" title="${fetched.title}"`, 'color: #4ade80; font-weight: bold');
+
+        console.log(`%c[DB] ✅ FOUND IN 2-TABLE DB: id="${fetched.id}" title="${fetched.title}"`, 'color: #4ade80; font-weight: bold');
         return fetched;
       }
     }
 
-    // 2. Check official mock data
+    // Offline fallback to MOCK_QPS
     if (typeof MOCK_QPS !== 'undefined') {
       const found = MOCK_QPS.find(item => item.qp_code === idOrCode || item.id === idOrCode);
       if (found) return found;
-    }
-
-    // 3. Structural fallback for CUSTOM- shared links not found in DB
-    if (idOrCode.startsWith('CUSTOM-') && typeof aiEngine !== 'undefined') {
-      const parts = idOrCode.split('-');
-      const rawTopic = parts.length >= 2 ? parts[1].replace(/_/g, ' ').trim() : '';
-
-      if (rawTopic) {
-        const formattedTitle = rawTopic.charAt(0).toUpperCase() + rawTopic.slice(1).toLowerCase();
-        console.log(`[DB] Generating fresh fallback for custom topic: "${formattedTitle}"`);
-        const skeleton = aiEngine.generateFallbackCurriculum(rawTopic, formattedTitle);
-        skeleton.id = idOrCode;
-        await this.saveCurriculum(skeleton);
-        return skeleton;
-      }
     }
 
     return null;
   }
 
   /**
-   * Delete a curriculum by ID directly from Turso Edge DB
+   * Update video mapping for a single reel in Table 2 (skill_reels_media)
+   */
+  async updateReelVideo(skillId, reelIndex, newVideoId, language = 'en') {
+    const mediaId = `${skillId}_les_${reelIndex}_${language}`;
+    console.log(`[DB] Updating Reel Video in Table 2: skillId="${skillId}", reelIndex=${reelIndex}, newVideoId="${newVideoId}"`);
+
+    await this.executeTursoPipeline([{
+      sql: `UPDATE skill_reels_media SET video_id = ?, updated_at = ? WHERE id = ?;`,
+      args: [
+        { type: 'text', value: newVideoId },
+        { type: 'text', value: new Date().toISOString() },
+        { type: 'text', value: mediaId }
+      ]
+    }]);
+
+    return true;
+  }
+
+  /**
+   * Delete a curriculum from Table 1 and Table 2
    */
   async deleteCurriculum(id) {
     if (!id) return false;
-    console.log(`[DB] Deleting "${id}" from Turso Edge Database`);
+    console.log(`[DB] Deleting "${id}" from 2-Table Turso DB`);
 
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith(`pc_prog_${id}_`)) {
@@ -256,16 +361,16 @@ class SkillPediaDB {
       }
     });
 
-    await this.executeTursoPipeline([{
-      sql: "DELETE FROM curricula WHERE id = ? OR qp_code = ?;",
-      args: [{ type: 'text', value: id }, { type: 'text', value: id }]
-    }]);
+    await this.executeTursoPipeline([
+      { sql: "DELETE FROM skill_reels_media WHERE skill_id = ?;", args: [{ type: 'text', value: id }] },
+      { sql: "DELETE FROM skills_curriculum WHERE skill_id = ? OR qp_code = ?;", args: [{ type: 'text', value: id }, { type: 'text', value: id }] }
+    ]);
 
     return true;
   }
 
   /**
-   * Save an Employer Package & Share Code to Turso DB
+   * Save an Employer Package to Turso DB
    */
   async createEmployerPackage(pkg) {
     const packages = JSON.parse(localStorage.getItem(STORAGE_KEY_PACKAGES) || '[]');
@@ -291,7 +396,7 @@ class SkillPediaDB {
   }
 
   /**
-   * Fetch an Employer Package by Share Code or Package ID
+   * Fetch an Employer Package
    */
   async getEmployerPackage(codeOrId) {
     const dbRes = await this.executeTursoPipeline([{
@@ -321,7 +426,7 @@ class SkillPediaDB {
   }
 
   /**
-   * Submit a content safety report to Turso DB
+   * Submit a content safety report
    */
   async reportContent(packageId, reason) {
     const report = {
