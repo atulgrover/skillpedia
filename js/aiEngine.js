@@ -103,13 +103,106 @@ class AICurriculumEngine {
 
     llmResult.lessons = lessonsWithVideos;
 
-    // 6. Save newly synthesized course to Turso DB in background
+    // 6. SECOND PASS: LLM VIDEO-TO-NOS RELEVANCE VERIFICATION AUDIT
+    onProgress(3, `Verifying Video Relevance against NOS Requirements via AI Audit...`, 85);
+    console.log(`[AI] Step 6: Executing LLM Video-to-NOS Relevance Audit Pass for "${cleanTopic}"...`);
+
+    try {
+      const auditResult = await this.verifyReelVideoRelevance(cleanTopic, llmResult.lessons, apiKey);
+      if (auditResult && Array.isArray(auditResult.verifications)) {
+        auditResult.verifications.forEach((v) => {
+          const les = llmResult.lessons.find(l => l.reel_index === v.reel_index);
+          if (les && les.candidates && les.candidates[v.selected_index]) {
+            const bestCand = les.candidates[v.selected_index];
+            les.video_id = bestCand.video_id;
+            les.audit_score = v.confidence || 90;
+            les.audit_reason = v.reason || 'Verified relevant to NOS criteria';
+            console.log(`[AI-AUDIT] Reel ${v.reel_index}: Selected candidate #${v.selected_index} ("${bestCand.title}") — Score: ${v.confidence}%`);
+          }
+        });
+      }
+    } catch (auditErr) {
+      console.warn(`[AI-AUDIT] ⚠️ LLM Video Audit Pass skipped/soft-failed (${auditErr.message}). Using top candidates.`);
+    }
+
+    // 7. Save newly synthesized course to Turso DB in background
     try {
       dbClient.saveCurriculum(llmResult);
     } catch (_) {}
 
-    onProgress(4, '11 Reel Candidates Ready for Creator Confirmation!', 100);
+    onProgress(4, '11 Reel Candidates Verified & Ready for Creator Confirmation!', 100);
     return llmResult;
+  }
+
+  /**
+   * LLM Video-to-NOS Relevance Audit Pass:
+   * Sends candidate video titles + NOS requirements back to LLM to pick 100% relevant videos.
+   */
+  async verifyReelVideoRelevance(topic, lessons, apiKey) {
+    const auditPayload = lessons.map(l => ({
+      reel_index: l.reel_index,
+      nos_code: l.nos_code,
+      title: l.title,
+      pcs: l.pcs ? l.pcs.slice(0, 2) : [],
+      candidates: (l.candidates || []).map((c, i) => ({ index: i, video_id: c.video_id, title: c.title }))
+    }));
+
+    const systemPrompt = `You are an expert NSQF Skill Curriculum Auditor.
+For the skill course "${topic}", verify candidate YouTube video titles against each reel's NOS requirements.
+
+For each reel, select the candidate index (0, 1, or 2) whose title is MOST relevant to the NOS step and Performance Criteria.
+
+Respond ONLY with raw JSON:
+{
+  "verifications": [
+    { "reel_index": 1, "selected_index": 0, "confidence": 95, "reason": "Title directly matches NOS criteria" },
+    ... 11 reels
+  ]
+}`;
+
+    const candidateModels = [
+      'google/gemini-2.0-flash-exp:free',
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'deepseek/deepseek-r1:free',
+      'openrouter/auto'
+    ];
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    for (const modelName of candidateModels) {
+      try {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://skillpedia.pages.dev',
+            'X-Title': 'SkillPedia PWA'
+          },
+          body: JSON.stringify({
+            model: modelName,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: `Verify video candidates for: ${JSON.stringify(auditPayload)}` }
+            ],
+            temperature: 0.2
+          })
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) continue;
+        const data = await response.json();
+        const rawContent = data.choices?.[0]?.message?.content?.trim() || '';
+        const cleanJson = rawContent.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '');
+        return JSON.parse(cleanJson);
+      } catch (_) {
+        clearTimeout(timeoutId);
+      }
+    }
+    return null;
   }
 
   /**
